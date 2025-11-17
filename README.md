@@ -4,6 +4,8 @@ Aplicação web para validação de colaboradores Oracle e envio de áudios para
 
 **🔒 Segurança:** A lista de emails permitidos e a URL do bucket OCI agora estão protegidas no backend (Serverless Functions), não sendo mais expostas no código do frontend.
 
+**📱 PWA:** Aplicação pode ser instalada na tela inicial do celular, funcionando como um app nativo (Android e iOS).
+
 ## 🚀 Deploy na Vercel (Plano Gratuito)
 
 **⚠️ IMPORTANTE:** Configure a variável de ambiente na Vercel ANTES de fazer o deploy!
@@ -63,7 +65,12 @@ Após o deploy, teste:
 │   ├── validate-email.js        # API de validação (lista embarcada no código)
 │   ├── upload.js                # API de upload (lista embarcada no código)
 │   └── upload.config.js         # Configuração da função de upload
+├── lib/                          # Bibliotecas do backend
+│   └── allowed-emails.js        # Lista de emails (não servida como estático)
 ├── app.js                        # Frontend (sem dados sensíveis)
+├── pwa.js                        # Código PWA (instalação e service worker)
+├── sw.js                         # Service Worker (cache e offline)
+├── manifest.json                 # Manifest PWA (configuração do app)
 ├── index.html                    # Interface HTML
 ├── styles.css                    # Estilos
 └── vercel.json                   # Configuração da Vercel
@@ -73,6 +80,7 @@ Após o deploy, teste:
 
 - A lista de emails está embarcada diretamente nos arquivos `validate-email.js` e `upload.js`. Isso garante que não seja acessível como arquivo estático, mesmo em desenvolvimento local.
 - **Não é mais necessário** o arquivo `config.js` nem o script `inject-config.js`. A configuração do OCI é feita apenas via variável de ambiente na Vercel.
+- **PWA:** A aplicação pode ser instalada na tela inicial. Veja `PWA_SETUP.md` para detalhes e como gerar os ícones necessários.
 
 ## 🔐 Segurança Implementada
 
@@ -192,8 +200,29 @@ npx serve .
 - Use `vercel dev` para rodar as Serverless Functions localmente
 - Ou faça deploy na Vercel para testar completamente
 
+## 📱 PWA (Progressive Web App)
+
+A aplicação pode ser instalada na tela inicial do celular (Android e iOS), funcionando como um aplicativo nativo.
+
+### Funcionalidades PWA
+
+- ✅ Instalação na tela inicial
+- ✅ Funciona offline (após primeira visita)
+- ✅ Abre em tela cheia (sem barra do navegador)
+- ✅ Ícone personalizado na tela inicial
+- ✅ Prompt de instalação customizado
+
+### Configuração
+
+1. **Gerar ícones:** Crie `icon-192.png` e `icon-512.png` (veja `PWA_SETUP.md`)
+2. **Deploy:** Os arquivos PWA já estão configurados
+3. **Testar:** Acesse via HTTPS e teste a instalação
+
+Para mais detalhes, consulte: **[PWA_SETUP.md](./PWA_SETUP.md)**
+
 ## 📚 Recursos
 
 - [Documentação da Vercel](https://vercel.com/docs)
 - [Serverless Functions da Vercel](https://vercel.com/docs/functions)
 - [Oracle Cloud Infrastructure - Object Storage](https://docs.oracle.com/en-us/iaas/Content/Object/Concepts/objectstorageoverview.htm)
+- [Progressive Web Apps - MDN](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)

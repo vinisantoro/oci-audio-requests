@@ -3,12 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Envie solicitações de áudio com segurança no Oracle Cloud"
+    />
+    <meta name="theme-color" content="#c74634" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Audio Requests" />
     <title>Oracle | Solicitação de Áudio</title>
     <link
       rel="icon"
       href="https://www.oracle.com/a/ocom/img/favicon-32.png"
       type="image/png"
     />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="manifest" href="/manifest.json" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -43,9 +53,9 @@
             ></path>
           </svg>
         </div>
-        <p class="tagline">
+        <!-- <p class="tagline">
           Envie solicitações de áudio com segurança no Oracle Cloud
-        </p>
+        </p> -->
       </div>
     </header>
 
@@ -167,6 +177,17 @@
       >
     </footer>
 
+    <div id="install-prompt" class="install-prompt is-hidden" role="banner">
+      <div class="install-prompt-content">
+        <p>Instale este app na sua tela inicial para acesso rápido!</p>
+        <div class="install-prompt-buttons">
+          <button id="install-btn" class="primary">Instalar</button>
+          <button id="dismiss-install" class="secondary">Agora não</button>
+        </div>
+      </div>
+    </div>
+
     <script src="app.js" defer></script>
+    <script src="pwa.js" defer></script>
   </body>
 </html>
