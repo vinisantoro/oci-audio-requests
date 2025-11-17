@@ -1,0 +1,235 @@
+:root {
+  --oracle-red: #c74634;
+  --oracle-red-dark: #a63225;
+  --oracle-charcoal: #312d2a;
+  --oracle-warm-gray: #f4f2f0;
+  --oracle-white: #ffffff;
+  --oracle-border: #d9d4ce;
+  --oracle-muted: #6f665f;
+  --radius: 12px;
+  --transition: 200ms ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Helvetica Neue', 'Segoe UI', Arial, sans-serif;
+  background-color: var(--oracle-warm-gray);
+  color: var(--oracle-charcoal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero {
+  width: 100%;
+  background: var(--oracle-charcoal);
+  padding: 32px 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.brand {
+  width: 100%;
+  max-width: 960px;
+}
+
+#u30logo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  padding-bottom: 1rem;
+}
+
+.u30-oicn-mobile {
+  display: none;
+}
+
+.u30-oicn {
+  max-width: 230px;
+  height: auto;
+}
+
+.tagline {
+  color: var(--oracle-warm-gray);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.card {
+  width: min(960px, 92%);
+  background: var(--oracle-white);
+  margin: -60px auto 32px;
+  border-radius: var(--radius);
+  box-shadow: 0 25px 60px rgba(18, 15, 12, 0.15);
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  color: var(--oracle-muted);
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-weight: 600;
+  color: var(--oracle-charcoal);
+}
+
+.lead {
+  margin: 0;
+  color: var(--oracle-muted);
+  font-size: 1rem;
+}
+
+.email-form label {
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.input-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+input[type='email'] {
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--oracle-border);
+  font-size: 1rem;
+  transition: border-color var(--transition);
+}
+
+input[type='email']:focus {
+  outline: none;
+  border-color: var(--oracle-red);
+  box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.2);
+}
+
+button.primary {
+  background: var(--oracle-red);
+  color: var(--oracle-white);
+  border: none;
+  border-radius: var(--radius);
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition);
+}
+
+button.primary:disabled {
+  background: var(--oracle-border);
+  color: var(--oracle-muted);
+  cursor: not-allowed;
+  transform: none;
+}
+
+button.primary:not(:disabled):hover {
+  background: var(--oracle-red-dark);
+  transform: translateY(-1px);
+}
+
+.feedback {
+  min-height: 1.4em;
+  margin: 4px 0 0;
+  font-size: 0.95rem;
+}
+
+.feedback.error {
+  color: var(--oracle-red);
+}
+
+.feedback.success {
+  color: #1b8759;
+}
+
+.recorder-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 20px;
+  border: 1px dashed var(--oracle-border);
+  border-radius: var(--radius);
+  background: var(--oracle-warm-gray);
+}
+
+.is-hidden {
+  display: none !important;
+}
+
+.status {
+  margin: 0;
+  font-weight: 500;
+}
+
+.muted {
+  color: var(--oracle-muted);
+}
+
+.timer {
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+.upload-status {
+  min-height: 1.2em;
+  font-size: 0.95rem;
+  color: var(--oracle-charcoal);
+}
+
+.footer {
+  width: 100%;
+  text-align: center;
+  padding: 24px 16px 40px;
+  color: var(--oracle-muted);
+}
+
+@media (max-width: 640px) {
+  #u30logo {
+    gap: 8px;
+  }
+
+  .u30-oicn {
+    display: none;
+  }
+
+  .u30-oicn-mobile {
+    display: block;
+  }
+
+  .card {
+    padding: 28px;
+  }
+
+  button.primary,
+  input[type='email'] {
+    width: 100%;
+  }
+}
