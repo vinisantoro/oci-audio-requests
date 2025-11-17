@@ -50,7 +50,7 @@
     </header>
 
     <main class="card" aria-live="polite">
-      <section class="step">
+      <section class="step" id="email-step">
         <div>
           <p class="eyebrow">Passo 1</p>
           <h1>Confirme seu e-mail @oracle.com</h1>
@@ -78,6 +78,16 @@
         </form>
       </section>
 
+      <section class="step is-hidden" id="email-summary">
+        <div>
+          <p class="eyebrow">Acesso autorizado</p>
+          <h2 id="active-email-label"></h2>
+          <p class="lead">
+            Verificamos sua identidade corporativa. Agora é só gravar.
+          </p>
+        </div>
+      </section>
+
       <section class="step recorder is-hidden" aria-disabled="true">
         <div>
           <p class="eyebrow">Passo 2</p>
@@ -89,13 +99,57 @@
         </div>
 
         <div class="recorder-panel">
-          <button id="record-btn" class="primary" type="button" disabled>
-            Iniciar gravação
-          </button>
+          <div class="button-row">
+            <button
+              id="record-btn"
+              class="primary icon-btn"
+              type="button"
+              disabled
+            >
+              <span class="btn-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                  <path
+                    d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.93V21H9v2h6v-2h-2v-2.07A7 7 0 0 0 19 12Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
+              <span id="record-btn-label" class="btn-label"
+                >Iniciar gravação</span
+              >
+            </button>
+
+            <button
+              id="send-btn"
+              class="accent icon-btn"
+              type="button"
+              disabled
+            >
+              <span class="btn-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                  <path
+                    d="M5 20v-2h14v2Zm7-4 5-5h-3V4h-4v7H7Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
+              <span id="send-btn-label" class="btn-label">Enviar gravação</span>
+            </button>
+          </div>
+
           <p id="record-status" class="status muted">
             Aguardando validação do e-mail.
           </p>
           <p id="timer" class="timer" aria-live="off">00:00</p>
+        </div>
+
+        <div
+          id="preview-panel"
+          class="preview-panel is-hidden"
+          aria-live="polite"
+        >
+          <p class="status">Pré-escute o áudio antes de enviar</p>
+          <audio id="preview-audio" controls preload="none"></audio>
         </div>
 
         <div

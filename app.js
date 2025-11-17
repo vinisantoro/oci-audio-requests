@@ -3,7 +3,6 @@ const OCI_UPLOAD_URL = (
     ? window.__OCI_CONFIG.OCI_UPLOAD_URL
     : ""
 ).trim();
-const FILE_PREFIX = "oci-audio-request";
 
 const allowedEmails = [
   "alessandra.lima@oracle.com",
@@ -162,8 +161,13 @@ const allowedEmails = [
   "tiago.macedo@oracle.com",
 ];
 
-const allowedEmailSet = new Set(allowedEmails.map((email) => email.toLowerCase()));
+const allowedEmailSet = new Set(
+  allowedEmails.map((email) => email.toLowerCase())
+);
 const form = document.getElementById("access-form");
+const emailStep = document.getElementById("email-step");
+const emailSummary = document.getElementById("email-summary");
+const activeEmailLabel = document.getElementById("active-email-label");
 const emailInput = document.getElementById("email");
 const feedback = document.getElementById("email-feedback");
 const recordBtn = document.getElementById("record-btn");
@@ -171,6 +175,11 @@ const recordStatus = document.getElementById("record-status");
 const timerDisplay = document.getElementById("timer");
 const uploadStatus = document.getElementById("upload-status");
 const recorderSection = document.querySelector(".recorder");
+const recordBtnLabel = document.getElementById("record-btn-label");
+const sendBtn = document.getElementById("send-btn");
+const sendBtnLabel = document.getElementById("send-btn-label");
+const previewPanel = document.getElementById("preview-panel");
+const previewAudio = document.getElementById("preview-audio");
 const yearSpan = document.getElementById("year");
 
 let mediaRecorder;
@@ -179,6 +188,8 @@ let chunks = [];
 let timerInterval;
 let elapsedSeconds = 0;
 let activeEmail = "";
+let lastAudioUrl = "";
+let latestBlob = null;
 
 if (yearSpan) {
   yearSpan.textContent = new Date().getFullYear();
@@ -198,8 +209,13 @@ form.addEventListener("submit", (event) => {
       "Este e-mail não está autorizado. Verifique se digitou exatamente o endereço corporativo aprovado.";
     feedback.className = "feedback error";
     recordBtn.disabled = true;
+    if (sendBtn) {
+      sendBtn.disabled = true;
+    }
     recorderSection.setAttribute("aria-disabled", "true");
     recorderSection.classList.add("is-hidden");
+    resetPreview();
+    showEmailForm();
     activeEmail = "";
     return;
   }
@@ -207,12 +223,8 @@ form.addEventListener("submit", (event) => {
   feedback.textContent =
     "E-mail validado com sucesso. Você pode gravar o áudio.";
   feedback.className = "feedback success";
-  recordBtn.disabled = false;
-  recorderSection.setAttribute("aria-disabled", "false");
-  recorderSection.classList.remove("is-hidden");
-  recordStatus.textContent =
-    "Microfone disponível. Quando estiver pronto, inicie a gravação.";
   activeEmail = value;
+  revealRecorder();
 });
 
 recordBtn.addEventListener("click", () => {
@@ -224,8 +236,21 @@ recordBtn.addEventListener("click", () => {
   }
 });
 
+if (sendBtn) {
+  sendBtn.addEventListener("click", () => {
+    if (sendBtn.disabled) return;
+    if (!latestBlob) {
+      uploadStatus.textContent = "Grave um áudio antes de tentar enviar.";
+      uploadStatus.className = "upload-status error";
+      return;
+    }
+    uploadAudio(latestBlob);
+  });
+}
+
 async function startRecording() {
   try {
+    resetPreview();
     recordBtn.disabled = true;
     recordStatus.textContent = "Solicitando acesso ao microfone...";
     mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -244,11 +269,17 @@ async function startRecording() {
       clearInterval(timerInterval);
       timerInterval = null;
       const blob = new Blob(chunks, { type: "audio/webm" });
+      latestBlob = blob;
+      updatePreview(blob);
       timerDisplay.textContent = "00:00";
-      recordBtn.textContent = "Iniciar gravação";
+      setRecordButtonLabel("Iniciar gravação");
       recordBtn.disabled = false;
-      recordStatus.textContent = "Processando áudio para upload...";
-      uploadAudio(blob);
+      recordStatus.textContent =
+        "Pré-escute o áudio e clique em Enviar quando estiver tudo certo.";
+      if (sendBtn) {
+        sendBtn.disabled = false;
+        setSendButtonLabel("Enviar gravação");
+      }
       stopStream();
     });
 
@@ -260,8 +291,11 @@ async function startRecording() {
 
     recordStatus.textContent = "Gravando... Clique para finalizar e enviar.";
     uploadStatus.textContent = "";
-    recordBtn.textContent = "Parar e enviar";
+    setRecordButtonLabel("Parar e revisar");
     recordBtn.disabled = false;
+    if (sendBtn) {
+      sendBtn.disabled = true;
+    }
   } catch (error) {
     recordBtn.disabled = false;
     recordStatus.textContent =
@@ -284,6 +318,12 @@ function stopStream() {
 }
 
 async function uploadAudio(blob) {
+  if (!blob) {
+    uploadStatus.textContent =
+      "Não há áudio disponível para envio. Grave um novo arquivo.";
+    uploadStatus.className = "upload-status error";
+    return;
+  }
   if (!OCI_UPLOAD_URL) {
     uploadStatus.textContent =
       "Configure o OCI_UPLOAD_URL no config.js ou via variável de ambiente para habilitar o upload.";
@@ -291,22 +331,31 @@ async function uploadAudio(blob) {
     return;
   }
 
-  const fileName = `${FILE_PREFIX}-${Date.now()}.webm`;
-  const formData = new FormData();
-  formData.append("file", blob, fileName);
-  formData.append("uploaderEmail", activeEmail);
-
-  uploadStatus.textContent = "Enviando áudio com POST seguro para o bucket...";
+  const fileName = generateFileName(activeEmail);
+  const uploadUrl = buildUploadUrl(fileName);
+  if (!uploadUrl) {
+    uploadStatus.textContent =
+      "O formato do OCI_UPLOAD_URL é inválido. Certifique-se de usar o endpoint completo do PAR de POST.";
+    uploadStatus.className = "upload-status error";
+    return;
+  }
+  uploadStatus.textContent =
+    "Enviando gravação com PUT seguro para o bucket...";
   uploadStatus.className = "upload-status";
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    setSendButtonLabel("Enviando...");
+  }
 
   try {
-    const response = await fetch(
-      `${OCI_UPLOAD_URL}${encodeURIComponent(fileName)}`,
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
+    const response = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": blob.type || "application/octet-stream",
+        "x-object-meta-uploader-email": activeEmail,
+      },
+      body: blob,
+    });
 
     if (!response.ok) {
       throw new Error(`Falha no upload: ${response.status}`);
@@ -316,12 +365,22 @@ async function uploadAudio(blob) {
     uploadStatus.className = "upload-status success";
     recordStatus.textContent =
       "Áudio entregue. Você pode gravar novamente se desejar.";
+    resetPreview();
+    showSuccessToast("Gravação enviada com sucesso para o bucket OCI.");
+    if (sendBtn) {
+      sendBtn.disabled = true;
+      setSendButtonLabel("Enviar gravação");
+    }
   } catch (error) {
     console.error("Erro no upload", error);
     uploadStatus.textContent =
       "Não foi possível enviar o áudio. Tente novamente.";
     uploadStatus.className = "upload-status error";
     recordStatus.textContent = "Ocorreu um erro durante o upload.";
+    if (sendBtn) {
+      sendBtn.disabled = false;
+      setSendButtonLabel("Enviar gravação");
+    }
   }
 }
 
@@ -329,4 +388,123 @@ function formatTime(totalSeconds) {
   const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
   const seconds = String(totalSeconds % 60).padStart(2, "0");
   return `${minutes}:${seconds}`;
+}
+
+function buildUploadUrl(fileName) {
+  if (!OCI_UPLOAD_URL) return null;
+  const trimmed = OCI_UPLOAD_URL.trim();
+  if (!trimmed) return null;
+
+  const encodedName = encodeURIComponent(fileName);
+  const endsWithSlash = trimmed.endsWith("/");
+  return `${trimmed}${endsWithSlash ? "" : "/"}${encodedName}`;
+}
+
+function updatePreview(blob) {
+  if (!previewPanel || !previewAudio || !blob) {
+    return;
+  }
+
+  if (lastAudioUrl) {
+    URL.revokeObjectURL(lastAudioUrl);
+    lastAudioUrl = "";
+  }
+
+  lastAudioUrl = URL.createObjectURL(blob);
+  previewAudio.src = lastAudioUrl;
+  previewAudio.load();
+  previewPanel.classList.remove("is-hidden");
+}
+
+function resetPreview() {
+  if (lastAudioUrl) {
+    URL.revokeObjectURL(lastAudioUrl);
+    lastAudioUrl = "";
+  }
+
+  if (previewAudio) {
+    previewAudio.pause();
+    previewAudio.removeAttribute("src");
+    previewAudio.load();
+  }
+
+  if (previewPanel && !previewPanel.classList.contains("is-hidden")) {
+    previewPanel.classList.add("is-hidden");
+  }
+
+  latestBlob = null;
+}
+
+window.addEventListener("beforeunload", resetPreview);
+
+function setRecordButtonLabel(label) {
+  if (recordBtnLabel) {
+    recordBtnLabel.textContent = label;
+  } else {
+    recordBtn.textContent = label;
+  }
+}
+
+function setSendButtonLabel(label) {
+  if (sendBtnLabel) {
+    sendBtnLabel.textContent = label;
+  } else if (sendBtn) {
+    sendBtn.textContent = label;
+  }
+}
+
+function revealRecorder() {
+  if (emailStep) {
+    emailStep.classList.add("is-hidden");
+  }
+  if (emailSummary) {
+    emailSummary.classList.remove("is-hidden");
+  }
+  if (activeEmailLabel) {
+    activeEmailLabel.textContent = activeEmail;
+  }
+
+  recordBtn.disabled = false;
+  recorderSection.setAttribute("aria-disabled", "false");
+  recorderSection.classList.remove("is-hidden");
+  recordStatus.textContent =
+    "Microfone disponível. Quando estiver pronto, inicie a gravação.";
+  setRecordButtonLabel("Iniciar gravação");
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    setSendButtonLabel("Enviar gravação");
+  }
+}
+
+function showEmailForm() {
+  if (emailStep) {
+    emailStep.classList.remove("is-hidden");
+  }
+  if (emailSummary) {
+    emailSummary.classList.add("is-hidden");
+  }
+  recorderSection.setAttribute("aria-disabled", "true");
+  recorderSection.classList.add("is-hidden");
+  emailInput.value = "";
+  feedback.textContent = "";
+  activeEmail = "";
+  recordStatus.textContent = "Aguardando validação do e-mail.";
+  uploadStatus.textContent = "";
+  setRecordButtonLabel("Iniciar gravação");
+  if (sendBtn) {
+    sendBtn.disabled = true;
+    setSendButtonLabel("Enviar gravação");
+  }
+}
+
+function generateFileName(emailAddress) {
+  const base = (emailAddress || "oracle-user").toLowerCase();
+  const safeEmail = base.replace(/[^a-z0-9._-]/g, "-");
+  return `${safeEmail}-${Date.now()}.webm`;
+}
+
+function showSuccessToast(message) {
+  if (!message) return;
+  uploadStatus.textContent = message;
+  uploadStatus.className = "upload-status success";
 }

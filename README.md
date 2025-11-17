@@ -10,6 +10,7 @@ Aplicação web estática (HTML + CSS + JS puro) para validação de colaborador
    ```
 2. Abra `config.js` e substitua o valor por seu endpoint de requisição autenticada (PAR) de **POST** do Object Storage.
 3. Mantenha `config.js` fora do versionamento (já está listado no `.gitignore`).
+4. O valor deve ser o **endpoint completo** do Pre-Authenticated Request (PAR) configurado com permissão _Object Write_ para o bucket desejado, finalizando em `/o/`. O aplicativo anexa o nome do arquivo diretamente ao caminho (ex.: `.../b/audio/o/oci-audio-request-123.webm`), portanto basta informar o link base do PAR até `/o/`. O upload é feito com método **PUT**, seguindo o mesmo padrão de um `curl --data-binary` direto para o PAR.
 
 ### Variável de ambiente (para Vercel ou pipelines)
 
@@ -36,8 +37,10 @@ A tela de login verifica o endereço informado contra uma lista fixa de e-mails 
 - Validação do email corporativo (@oracle.com).
 - Conferência contra lista de colaboradores autorizados (whitelist em `app.js`).
 - Habilitação dinâmica do gravador apenas após validação.
+- Pré-escuta do áudio gravado diretamente no navegador.
 - Captura de áudio via API de MediaRecorder.
 - Envio exclusivo via POST para o bucket OCI informado, sem operações de GET/List.
+- Nome do arquivo final segue o padrão `email-timestamp.webm`, garantindo rastreabilidade de quem enviou.
 
 ## Deploy na Vercel
 
