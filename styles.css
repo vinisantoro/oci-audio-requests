@@ -307,7 +307,51 @@ button.primary:not(:disabled):hover {
   color: var(--oracle-muted);
 }
 
+/* Toast notifications */
+.toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  min-width: 300px;
+  max-width: 500px;
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(18, 15, 12, 0.2);
+  font-size: 0.95rem;
+  font-weight: 500;
+  z-index: 10000;
+  display: none;
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 300ms ease, transform 300ms ease;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.toast-error {
+  background: var(--oracle-white);
+  color: var(--oracle-red-dark);
+  border: 2px solid var(--oracle-red);
+}
+
+.toast-error::before {
+  content: "⚠️ ";
+  margin-right: 8px;
+}
+
 @media (max-width: 640px) {
+  .toast {
+    right: 16px;
+    left: 16px;
+    min-width: auto;
+    max-width: none;
+  }
+
   #u30logo {
     gap: 8px;
   }
