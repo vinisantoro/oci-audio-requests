@@ -192,7 +192,7 @@ module.exports = async (req, res) => {
     if (!normalizedEmail.includes('@oracle.com')) {
       return res.status(200).json({ 
         valid: false, 
-        error: 'E-mail não permitidos' 
+        error: '403 not authorized' 
       });
     }
 

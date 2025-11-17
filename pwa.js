@@ -4,6 +4,23 @@ let installPrompt = document.getElementById('install-prompt');
 let installBtn = document.getElementById('install-btn');
 let dismissBtn = document.getElementById('dismiss-install');
 
+// Verificar se já foi dispensado recentemente (últimas 24h)
+function shouldShowInstallPrompt() {
+  const dismissed = localStorage.getItem('pwa-install-dismissed');
+  if (!dismissed) return true;
+  
+  const dismissedTime = parseInt(dismissed, 10);
+  const dayInMs = 24 * 60 * 60 * 1000;
+  return Date.now() - dismissedTime > dayInMs;
+}
+
+// Verificar se está em modo standalone (já instalado)
+function isStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches ||
+         window.navigator.standalone === true ||
+         document.referrer.includes('android-app://');
+}
+
 // Registrar Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -19,17 +36,26 @@ if ('serviceWorker' in navigator) {
 
 // Detectar evento de instalação (antes do prompt nativo)
 window.addEventListener('beforeinstallprompt', (e) => {
-  // Prevenir o prompt automático
-  e.preventDefault();
+  // Guardar o evento para usar depois
   deferredPrompt = e;
   
-  // Mostrar nosso prompt customizado
-  if (installPrompt && shouldShowInstallPrompt()) {
-    installPrompt.classList.remove('is-hidden');
-    // Trigger reflow para animação
-    void installPrompt.offsetWidth;
-    installPrompt.classList.add('show');
+  // Só prevenir o prompt automático se quisermos mostrar nosso prompt customizado
+  // Caso contrário, deixar o prompt nativo aparecer
+  if (installPrompt && shouldShowInstallPrompt() && !isStandalone()) {
+    // Prevenir o prompt automático apenas se vamos mostrar nosso customizado
+    e.preventDefault();
+    
+    // Mostrar nosso prompt customizado após um pequeno delay
+    setTimeout(() => {
+      if (installPrompt && installPrompt.classList.contains('is-hidden')) {
+        installPrompt.classList.remove('is-hidden');
+        // Trigger reflow para animação
+        void installPrompt.offsetWidth;
+        installPrompt.classList.add('show');
+      }
+    }, 2000); // Mostrar após 2 segundos
   }
+  // Se não quisermos mostrar nosso prompt, deixar o nativo aparecer
 });
 
 // Botão de instalação
@@ -80,23 +106,6 @@ window.addEventListener('appinstalled', () => {
     installPrompt.classList.add('is-hidden');
   }
 });
-
-// Verificar se já foi dispensado recentemente (últimas 24h)
-function shouldShowInstallPrompt() {
-  const dismissed = localStorage.getItem('pwa-install-dismissed');
-  if (!dismissed) return true;
-  
-  const dismissedTime = parseInt(dismissed, 10);
-  const dayInMs = 24 * 60 * 60 * 1000;
-  return Date.now() - dismissedTime > dayInMs;
-}
-
-// Verificar se está em modo standalone (já instalado)
-function isStandalone() {
-  return window.matchMedia('(display-mode: standalone)').matches ||
-         window.navigator.standalone === true ||
-         document.referrer.includes('android-app://');
-}
 
 // Mostrar instruções de instalação manual
 function showInstallInstructions() {

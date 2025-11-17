@@ -121,17 +121,16 @@ recordBtn.addEventListener("click", () => {
   }
 });
 
-if (sendBtn) {
-  sendBtn.addEventListener("click", () => {
-    if (sendBtn.disabled) return;
-    if (!latestBlob) {
-      uploadStatus.textContent = "Grave um áudio antes de tentar enviar.";
-      uploadStatus.className = "upload-status error";
-      return;
-    }
-    uploadAudio(latestBlob);
-  });
-}
+  if (sendBtn) {
+    sendBtn.addEventListener("click", () => {
+      if (sendBtn.disabled) return;
+      if (!latestBlob) {
+        showErrorToast("Grave um áudio antes de tentar enviar.");
+        return;
+      }
+      uploadAudio(latestBlob);
+    });
+  }
 
 async function startRecording() {
   try {
@@ -204,21 +203,16 @@ function stopStream() {
 
 async function uploadAudio(blob) {
   if (!blob) {
-    uploadStatus.textContent =
-      "Não há áudio disponível para envio. Grave um novo arquivo.";
-    uploadStatus.className = "upload-status error";
+    showErrorToast("Não há áudio disponível para envio. Grave um novo arquivo.");
     return;
   }
 
   if (!activeEmail) {
-    uploadStatus.textContent =
-      "E-mail não validado. Por favor, valide seu e-mail primeiro.";
-    uploadStatus.className = "upload-status error";
+    showErrorToast("E-mail não validado. Por favor, valide seu e-mail primeiro.");
     return;
   }
 
-  uploadStatus.textContent =
-    "Enviando gravação para o servidor...";
+  uploadStatus.textContent = "Enviando gravação para o servidor...";
   uploadStatus.className = "upload-status";
   if (sendBtn) {
     sendBtn.disabled = true;
@@ -242,10 +236,10 @@ async function uploadAudio(blob) {
       throw new Error(data.error || `Falha no upload: ${response.status}`);
     }
 
-    uploadStatus.textContent = "Upload concluído com sucesso!";
-    uploadStatus.className = "upload-status success";
     recordStatus.textContent =
       "Áudio entregue. Você pode gravar novamente se desejar.";
+    uploadStatus.textContent = "";
+    uploadStatus.className = "upload-status";
     resetPreview();
     showSuccessToast("Gravação enviada com sucesso para o bucket OCI.");
     if (sendBtn) {
@@ -254,10 +248,11 @@ async function uploadAudio(blob) {
     }
   } catch (error) {
     console.error("Erro no upload", error);
-    uploadStatus.textContent =
-      error.message || "Não foi possível enviar o áudio. Tente novamente.";
-    uploadStatus.className = "upload-status error";
+    const errorMessage = error.message || "Não foi possível enviar o áudio. Tente novamente.";
     recordStatus.textContent = "Ocorreu um erro durante o upload.";
+    uploadStatus.textContent = "";
+    uploadStatus.className = "upload-status";
+    showErrorToast(errorMessage);
     if (sendBtn) {
       sendBtn.disabled = false;
       setSendButtonLabel("Enviar gravação");
@@ -380,8 +375,32 @@ function generateFileName(emailAddress) {
 
 function showSuccessToast(message) {
   if (!message) return;
-  uploadStatus.textContent = message;
-  uploadStatus.className = "upload-status success";
+  
+  // Criar elemento de toast se não existir
+  let toast = document.getElementById("toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "toast";
+    toast.setAttribute("role", "alert");
+    toast.setAttribute("aria-live", "polite");
+    document.body.appendChild(toast);
+  }
+  
+  toast.textContent = message;
+  toast.className = "toast toast-success";
+  toast.style.display = "block";
+  
+  // Trigger reflow para animação
+  void toast.offsetWidth;
+  toast.classList.add("show");
+  
+  // Remover após 5 segundos
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => {
+      toast.style.display = "none";
+    }, 300); // Aguardar animação de saída
+  }, 5000);
 }
 
 function showErrorToast(message) {

@@ -8,6 +8,7 @@
       content="Envie solicitações de áudio com segurança no Oracle Cloud"
     />
     <meta name="theme-color" content="#c74634" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Audio Requests" />
@@ -25,7 +26,7 @@
     <header class="hero">
       <div class="brand">
         <div id="u30logo" aria-label="Oracle logo">
-          <svg
+          <!-- <svg
             class="u30-oicn-mobile"
             xmlns="http://www.w3.org/2000/svg"
             width="32"
@@ -36,7 +37,7 @@
               fill="#C74634"
               d="M9.9,20.1c-5.5,0-9.9-4.4-9.9-9.9c0-5.5,4.4-9.9,9.9-9.9h11.6c5.5,0,9.9,4.4,9.9,9.9c0,5.5-4.4,9.9-9.9,9.9H9.9 M21.2,16.6c3.6,0,6.4-2.9,6.4-6.4c0-3.6-2.9-6.4-6.4-6.4h-11c-3.6,0-6.4,2.9-6.4,6.4s2.9,6.4,6.4,6.4H21.2"
             ></path>
-          </svg>
+          </svg> -->
 
           <svg
             class="u30-oicn"
@@ -61,14 +62,14 @@
 
     <main class="card" aria-live="polite">
       <section class="step" id="email-step">
-        <div>
+        <!-- <div>
           <p class="eyebrow">Passo 1</p>
           <h1>Confirme seu e-mail</h1>
           <p class="lead">
             Por segurança, apenas colaboradores com endereço corporativo Oracle
             podem enviar áudios.
           </p>
-        </div>
+        </div> -->
         <form id="access-form" class="email-form" novalidate>
           <label for="email">E-mail corporativo</label>
           <div class="input-row">
@@ -88,7 +89,7 @@
         </form>
       </section>
 
-      <section class="step is-hidden" id="email-summary">
+      <!-- <section class="step is-hidden" id="email-summary">
         <div>
           <p class="eyebrow">Acesso autorizado</p>
           <h2 id="active-email-label"></h2>
@@ -96,17 +97,17 @@
             Verificamos sua identidade corporativa. Agora é só gravar.
           </p>
         </div>
-      </section>
+      </section> -->
 
       <section class="step recorder is-hidden" aria-disabled="true">
-        <div>
+        <!-- <div>
           <p class="eyebrow">Passo 2</p>
           <h2>Grave e envie seu áudio</h2>
           <p class="lead">
             Ao finalizar, o arquivo será enviado diretamente para o bucket
             pre-autenticado no Oracle Cloud Infrastructure via POST.
           </p>
-        </div>
+        </div> -->
 
         <div class="recorder-panel">
           <div class="button-row">

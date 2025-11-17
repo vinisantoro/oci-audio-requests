@@ -2,7 +2,7 @@
 
 Aplicação web para validação de colaboradores Oracle e envio de áudios para um bucket no Oracle Cloud Infrastructure (OCI).
 
-**🔒 Segurança:** A lista de emails permitidos e a URL do bucket OCI agora estão protegidas no backend (Serverless Functions), não sendo mais expostas no código do frontend.
+**🔒 Segurança:** A lista de emails permitidos e a URL do bucket OCI estão protegidas no backend (Serverless Functions), não sendo mais expostas no código do frontend.
 
 **📱 PWA:** Aplicação pode ser instalada na tela inicial do celular, funcionando como um app nativo (Android e iOS).
 
@@ -71,6 +71,9 @@ Após o deploy, teste:
 ├── pwa.js                        # Código PWA (instalação e service worker)
 ├── sw.js                         # Service Worker (cache e offline)
 ├── manifest.json                 # Manifest PWA (configuração do app)
+├── icon-192.png                  # Ícone PWA 192x192
+├── icon-512.png                  # Ícone PWA 512x512
+├── icon-oracle.svg               # SVG fonte dos ícones
 ├── index.html                    # Interface HTML
 ├── styles.css                    # Estilos
 └── vercel.json                   # Configuração da Vercel
@@ -80,7 +83,7 @@ Após o deploy, teste:
 
 - A lista de emails está embarcada diretamente nos arquivos `validate-email.js` e `upload.js`. Isso garante que não seja acessível como arquivo estático, mesmo em desenvolvimento local.
 - **Não é mais necessário** o arquivo `config.js` nem o script `inject-config.js`. A configuração do OCI é feita apenas via variável de ambiente na Vercel.
-- **PWA:** A aplicação pode ser instalada na tela inicial. Veja `PWA_SETUP.md` para detalhes e como gerar os ícones necessários.
+- **PWA:** Os ícones já estão incluídos no projeto. A aplicação pode ser instalada na tela inicial.
 
 ## 🔐 Segurança Implementada
 
@@ -134,19 +137,88 @@ vercel env pull .env.local
 vercel dev
 ```
 
+A aplicação estará disponível em `http://localhost:3000`
+
 ### Opção 2: Simular APIs Localmente
 
 Para testar sem a Vercel, você pode usar um servidor local simples:
 
 ```bash
-# Instalar dependências (se necessário)
-npm install
-
 # Usar um servidor estático simples
 npx serve .
 ```
 
 **Nota:** As APIs serverless só funcionam completamente quando deployadas na Vercel ou usando `vercel dev`.
+
+## 📱 PWA (Progressive Web App)
+
+A aplicação pode ser instalada na tela inicial do celular (Android e iOS), funcionando como um aplicativo nativo.
+
+### Funcionalidades PWA
+
+- ✅ Instalação na tela inicial
+- ✅ Funciona offline (após primeira visita)
+- ✅ Abre em tela cheia (sem barra do navegador)
+- ✅ Ícone personalizado na tela inicial
+- ✅ Prompt de instalação customizado
+
+### Como Testar no Telefone
+
+#### Android (Chrome/Edge)
+
+1. Abra o **Chrome** ou **Edge** no celular
+2. Acesse: `http://myrequest.dailybits.tech/` (ou sua URL da Vercel)
+3. Aguarde alguns segundos - um banner aparecerá na parte inferior:
+   ```
+   Instale este app na sua tela inicial para acesso rápido!
+   [Instalar] [Agora não]
+   ```
+4. Toque em **"Instalar"**
+5. Confirme quando o sistema perguntar
+6. O ícone aparecerá na tela inicial
+
+**Se o prompt não aparecer:**
+- Toque nos **3 pontos** (menu) → **"Instalar app"** ou **"Adicionar à tela inicial"**
+
+#### iOS (iPhone/iPad) - Apenas Safari
+
+**⚠️ IMPORTANTE:** No iOS, PWA só funciona no Safari. Chrome/Firefox/Edge não suportam.
+
+1. Abra o **Safari** (não funciona no Chrome/Firefox no iOS)
+2. Acesse: `http://myrequest.dailybits.tech/` (ou sua URL da Vercel)
+3. Toque no **botão de compartilhar** (quadrado com seta para cima)
+4. Role para baixo e toque em **"Adicionar à Tela de Início"**
+5. Confirme
+6. O ícone aparecerá na tela inicial
+
+### Ícones PWA
+
+Os ícones já estão incluídos no projeto:
+- `icon-192.png` (192x192 pixels)
+- `icon-512.png` (512x512 pixels)
+- `icon-oracle.svg` (fonte SVG)
+
+Se precisar regenerar os ícones, use o arquivo `icon-oracle.svg` como base e converta para PNG nos tamanhos necessários.
+
+### Personalização PWA
+
+Para alterar cores do tema, edite `manifest.json`:
+
+```json
+{
+  "theme_color": "#c74634",      // Cor da barra de status
+  "background_color": "#f4f2f0"   // Cor de fundo ao abrir
+}
+```
+
+Para alterar o nome do app, edite `manifest.json`:
+
+```json
+{
+  "name": "Oracle Audio Requests",  // Nome completo
+  "short_name": "Audio Requests"   // Nome curto (tela inicial)
+}
+```
 
 ## 📊 Limites do Plano Gratuito da Vercel
 
@@ -160,14 +232,13 @@ npx serve .
 ## 🔄 Fluxo da Aplicação
 
 1. **Validação de Email:**
-
    - Usuário digita email no frontend
    - Frontend chama `/api/validate-email` (POST)
    - Backend verifica contra lista protegida
    - Retorna `valid: true/false` sem expor a lista
+   - Toast de erro aparece se email inválido
 
 2. **Gravação de Áudio:**
-
    - Usuário grava áudio no navegador (MediaRecorder API)
    - Áudio fica disponível para pré-escuta
 
@@ -175,7 +246,7 @@ npx serve .
    - Frontend envia blob para `/api/upload` (POST)
    - Backend valida email novamente
    - Backend faz upload para OCI usando `OCI_UPLOAD_URL` (variável de ambiente)
-   - Retorna sucesso/erro
+   - Toast de sucesso/erro aparece conforme resultado
 
 ## 🐛 Troubleshooting
 
@@ -200,25 +271,24 @@ npx serve .
 - Use `vercel dev` para rodar as Serverless Functions localmente
 - Ou faça deploy na Vercel para testar completamente
 
-## 📱 PWA (Progressive Web App)
+### PWA não funciona no iOS
 
-A aplicação pode ser instalada na tela inicial do celular (Android e iOS), funcionando como um aplicativo nativo.
+- **Use apenas o Safari** - Chrome/Firefox/Edge no iOS não suportam PWA
+- Verifique se está acessando via HTTPS (obrigatório para PWA)
+- Limpe o cache do Safari se necessário
 
-### Funcionalidades PWA
+### Prompt de instalação não aparece
 
-- ✅ Instalação na tela inicial
-- ✅ Funciona offline (após primeira visita)
-- ✅ Abre em tela cheia (sem barra do navegador)
-- ✅ Ícone personalizado na tela inicial
-- ✅ Prompt de instalação customizado
+- Verifique se está em HTTPS (obrigatório)
+- Verifique o console do navegador para erros
+- Alguns navegadores só mostram após várias visitas
+- No Android, use o menu do navegador (3 pontos → Instalar app)
 
-### Configuração
+### Ícones não aparecem
 
-1. **Gerar ícones:** Crie `icon-192.png` e `icon-512.png` (veja `PWA_SETUP.md`)
-2. **Deploy:** Os arquivos PWA já estão configurados
-3. **Testar:** Acesse via HTTPS e teste a instalação
-
-Para mais detalhes, consulte: **[PWA_SETUP.md](./PWA_SETUP.md)**
+- Verifique se os arquivos `icon-192.png` e `icon-512.png` estão na raiz do projeto
+- Verifique se os caminhos no `manifest.json` estão corretos
+- Limpe o cache do navegador
 
 ## 📚 Recursos
 
@@ -226,3 +296,4 @@ Para mais detalhes, consulte: **[PWA_SETUP.md](./PWA_SETUP.md)**
 - [Serverless Functions da Vercel](https://vercel.com/docs/functions)
 - [Oracle Cloud Infrastructure - Object Storage](https://docs.oracle.com/en-us/iaas/Content/Object/Concepts/objectstorageoverview.htm)
 - [Progressive Web Apps - MDN](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
+- [PWA Builder](https://www.pwabuilder.com/)
