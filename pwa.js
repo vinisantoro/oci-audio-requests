@@ -39,23 +39,9 @@ window.addEventListener('beforeinstallprompt', (e) => {
   // Guardar o evento para usar depois
   deferredPrompt = e;
   
-  // Só prevenir o prompt automático se quisermos mostrar nosso prompt customizado
-  // Caso contrário, deixar o prompt nativo aparecer
-  if (installPrompt && shouldShowInstallPrompt() && !isStandalone()) {
-    // Prevenir o prompt automático apenas se vamos mostrar nosso customizado
-    e.preventDefault();
-    
-    // Mostrar nosso prompt customizado após um pequeno delay
-    setTimeout(() => {
-      if (installPrompt && installPrompt.classList.contains('is-hidden')) {
-        installPrompt.classList.remove('is-hidden');
-        // Trigger reflow para animação
-        void installPrompt.offsetWidth;
-        installPrompt.classList.add('show');
-      }
-    }, 2000); // Mostrar após 2 segundos
-  }
-  // Se não quisermos mostrar nosso prompt, deixar o nativo aparecer
+  // Não prevenir o prompt nativo por padrão
+  // Deixar o navegador mostrar o banner nativo automaticamente
+  // O prompt customizado só será mostrado se o usuário clicar no botão de instalação
 });
 
 // Botão de instalação

@@ -229,16 +229,25 @@ async function uploadAudio(blob) {
       body: JSON.stringify({ email: activeEmail }),
     });
 
+    // Verificar se a resposta é JSON antes de fazer parse
+    const contentType = urlResponse.headers.get('content-type');
     let urlData;
-    try {
-      urlData = await urlResponse.json();
-    } catch (jsonError) {
+    
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        urlData = await urlResponse.json();
+      } catch (jsonError) {
+        const errorText = await urlResponse.text().catch(() => 'Resposta inválida do servidor');
+        throw new Error(`Erro ao processar resposta JSON: ${errorText.substring(0, 100)}`);
+      }
+    } else {
+      // Se não for JSON, ler como texto
       const errorText = await urlResponse.text().catch(() => 'Resposta inválida do servidor');
-      throw new Error(`Erro ao processar resposta do servidor: ${errorText}`);
+      throw new Error(`Servidor retornou resposta não-JSON (${urlResponse.status}): ${errorText.substring(0, 200)}`);
     }
 
     if (!urlResponse.ok) {
-      throw new Error(urlData.error || `Falha ao obter URL de upload: ${urlResponse.status}`);
+      throw new Error(urlData?.error || `Falha ao obter URL de upload: ${urlResponse.status}`);
     }
 
     if (!urlData.uploadUrl) {

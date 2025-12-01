@@ -1,5 +1,5 @@
 // Service Worker para PWA
-const CACHE_NAME = 'oracle-audio-requests-v1';
+const CACHE_NAME = 'oracle-audio-requests-v2';
 const urlsToCache = [
   '/',
   '/index.html',

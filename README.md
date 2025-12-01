@@ -108,7 +108,7 @@ Após o deploy, teste:
 
 Para adicionar ou remover emails autorizados:
 
-1. Edite os arquivos `/api/validate-email.js` e `/api/upload.js`
+1. Edite os arquivos `/api/validate-email.js` e `/api/get-upload-url.js`
 2. Adicione ou remova emails do array `allowedEmails` em ambos os arquivos
 3. Faça commit e push
 4. A Vercel fará deploy automático
