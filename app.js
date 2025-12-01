@@ -212,7 +212,7 @@ async function uploadAudio(blob) {
     return;
   }
 
-  uploadStatus.textContent = "Enviando gravação para o servidor...";
+  uploadStatus.textContent = "Preparando upload...";
   uploadStatus.className = "upload-status";
   if (sendBtn) {
     sendBtn.disabled = true;
@@ -220,20 +220,36 @@ async function uploadAudio(blob) {
   }
 
   try {
-    // Enviar blob diretamente como binary data
-    const response = await fetch("/api/upload", {
+    // Primeiro, obter a URL de upload do PAR (valida email no backend)
+    const urlResponse = await fetch("/api/get-upload-url", {
       method: "POST",
       headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email: activeEmail }),
+    });
+
+    const urlData = await urlResponse.json();
+
+    if (!urlResponse.ok) {
+      throw new Error(urlData.error || `Falha ao obter URL de upload: ${urlResponse.status}`);
+    }
+
+    // Agora fazer upload direto para OCI (sem passar pelo servidor Vercel)
+    uploadStatus.textContent = "Enviando gravação para o bucket OCI...";
+    
+    const uploadResponse = await fetch(urlData.uploadUrl, {
+      method: "PUT",
+      headers: {
         "Content-Type": blob.type || "application/octet-stream",
-        "x-uploader-email": activeEmail,
+        "x-object-meta-uploader-email": urlData.email,
       },
       body: blob,
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || `Falha no upload: ${response.status}`);
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text().catch(() => 'Erro desconhecido');
+      throw new Error(`Falha no upload para OCI: ${uploadResponse.status}`);
     }
 
     recordStatus.textContent =

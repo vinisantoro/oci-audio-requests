@@ -229,6 +229,8 @@ Para alterar o nome do app, edite `manifest.json`:
 
 **Estimativa de uso:** Para uso moderado (dezenas de uploads por dia), você ficará bem dentro do plano gratuito.
 
+**Nota sobre uploads grandes:** A aplicação usa upload direto para OCI (sem passar pelo servidor Vercel), permitindo uploads de qualquer tamanho sem problemas de timeout. Apenas a validação de email passa pelo servidor, que é uma operação rápida.
+
 ## 🔄 Fluxo da Aplicação
 
 1. **Validação de Email:**
@@ -243,16 +245,17 @@ Para alterar o nome do app, edite `manifest.json`:
    - Áudio fica disponível para pré-escuta
 
 3. **Upload:**
-   - Frontend envia blob para `/api/upload` (POST)
-   - Backend valida email novamente
-   - Backend faz upload para OCI usando `OCI_UPLOAD_URL` (variável de ambiente)
+   - Frontend chama `/api/get-upload-url` (POST) com o email
+   - Backend valida email e retorna URL do PAR para upload
+   - Frontend faz upload **direto** para OCI usando a URL do PAR (PUT)
+   - O upload não passa pelo servidor Vercel, evitando timeout para arquivos grandes
    - Toast de sucesso/erro aparece conforme resultado
 
 ## 🐛 Troubleshooting
 
 ### Erro: "Email não autorizado"
 
-- Verifique se o email está na lista em `/api/validate-email.js` e `/api/upload.js`
+- Verifique se o email está na lista em `/api/validate-email.js` e `/api/get-upload-url.js`
 - Certifique-se de que o email está em minúsculas na lista
 - Lembre-se de atualizar a lista nos DOIS arquivos
 
@@ -265,6 +268,7 @@ Para alterar o nome do app, edite `manifest.json`:
 
 - Verifique se o PAR do OCI está ativo e tem permissão de escrita
 - Verifique os logs da Vercel em **Deployments** > **Functions** > **View Function Logs**
+- O upload é feito diretamente do navegador para OCI, então verifique também o console do navegador para erros de CORS ou rede
 
 ### APIs não funcionam localmente
 

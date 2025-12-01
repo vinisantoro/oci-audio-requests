@@ -160,16 +160,6 @@ const allowedEmailSet = new Set(
   allowedEmails.map((email) => email.toLowerCase())
 );
 
-// Função auxiliar para ler o body como buffer quando bodyParser está desabilitado
-function getRawBody(req) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    req.on('data', chunk => chunks.push(chunk));
-    req.on('end', () => resolve(Buffer.concat(chunks)));
-    req.on('error', reject);
-  });
-}
-
 module.exports = async (req, res) => {
   // Permitir apenas método POST
   if (req.method !== 'POST') {
@@ -179,7 +169,7 @@ module.exports = async (req, res) => {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-uploader-email');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   // Handle preflight
   if (req.method === 'OPTIONS') {
@@ -187,17 +177,17 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const uploaderEmail = req.headers['x-uploader-email'];
+    const { email } = req.body;
     const OCI_UPLOAD_URL = process.env.OCI_UPLOAD_URL;
 
     // Validar email do uploader
-    if (!uploaderEmail) {
+    if (!email) {
       return res.status(400).json({ 
         error: 'Email do uploader é obrigatório' 
       });
     }
 
-    const normalizedEmail = uploaderEmail.trim().toLowerCase();
+    const normalizedEmail = email.trim().toLowerCase();
     
     if (!allowedEmailSet.has(normalizedEmail)) {
       return res.status(403).json({ 
@@ -213,55 +203,27 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Ler o body como buffer (bodyParser está desabilitado)
-    const audioData = await getRawBody(req);
-
-    if (!audioData || audioData.length === 0) {
-      return res.status(400).json({ 
-        error: 'Dados de áudio vazios' 
-      });
-    }
-
-    const contentType = req.headers['content-type'] || 'application/octet-stream';
-
     // Gerar nome do arquivo
     const safeEmail = normalizedEmail.replace(/[^a-z0-9._-]/g, '-');
     const fileName = `${safeEmail}-${Date.now()}.webm`;
     const encodedName = encodeURIComponent(fileName);
     
-    // Construir URL de upload
+    // Construir URL de upload completa
     const trimmedUrl = OCI_UPLOAD_URL.trim();
     const endsWithSlash = trimmedUrl.endsWith('/');
     const uploadUrl = `${trimmedUrl}${endsWithSlash ? '' : '/'}${encodedName}`;
 
-    // Fazer upload para OCI
-    const uploadResponse = await fetch(uploadUrl, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': contentType,
-        'x-object-meta-uploader-email': normalizedEmail,
-      },
-      body: audioData,
-    });
-
-    if (!uploadResponse.ok) {
-      const errorText = await uploadResponse.text().catch(() => 'Erro desconhecido');
-      console.error('Erro no upload para OCI:', uploadResponse.status, errorText);
-      return res.status(uploadResponse.status).json({ 
-        error: `Falha no upload: ${uploadResponse.status}` 
-      });
-    }
-
     return res.status(200).json({ 
-      success: true, 
-      message: 'Upload concluído com sucesso',
-      fileName: fileName
+      success: true,
+      uploadUrl: uploadUrl,
+      fileName: fileName,
+      email: normalizedEmail
     });
 
   } catch (error) {
-    console.error('Erro no upload:', error);
+    console.error('Erro ao gerar URL de upload:', error);
     return res.status(500).json({ 
-      error: 'Erro interno do servidor durante o upload' 
+      error: 'Erro interno do servidor' 
     });
   }
 };
