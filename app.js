@@ -229,10 +229,20 @@ async function uploadAudio(blob) {
       body: JSON.stringify({ email: activeEmail }),
     });
 
-    const urlData = await urlResponse.json();
+    let urlData;
+    try {
+      urlData = await urlResponse.json();
+    } catch (jsonError) {
+      const errorText = await urlResponse.text().catch(() => 'Resposta inválida do servidor');
+      throw new Error(`Erro ao processar resposta do servidor: ${errorText}`);
+    }
 
     if (!urlResponse.ok) {
       throw new Error(urlData.error || `Falha ao obter URL de upload: ${urlResponse.status}`);
+    }
+
+    if (!urlData.uploadUrl) {
+      throw new Error('URL de upload não retornada pelo servidor');
     }
 
     // Agora fazer upload direto para OCI (sem passar pelo servidor Vercel)
@@ -249,7 +259,7 @@ async function uploadAudio(blob) {
 
     if (!uploadResponse.ok) {
       const errorText = await uploadResponse.text().catch(() => 'Erro desconhecido');
-      throw new Error(`Falha no upload para OCI: ${uploadResponse.status}`);
+      throw new Error(`Falha no upload para OCI: ${uploadResponse.status} - ${errorText}`);
     }
 
     recordStatus.textContent =
