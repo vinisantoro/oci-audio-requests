@@ -19,6 +19,7 @@ Web application for validating authorized users and uploading audio files to Ora
 Before deploying, you need to configure two environment variables:
 
 1. **Environment Variable: `OCI_UPLOAD_URL`**
+
    - **Value:** Your complete Pre-Authenticated Request (PAR) endpoint URL
      - Example: `https://objectstorage.sa-saopaulo-1.oraclecloud.com/p/<par-id>/n/<namespace>/b/<bucket>/o/`
    - Make sure this variable is available in all environments (Production, Preview, Development)
@@ -26,17 +27,45 @@ Before deploying, you need to configure two environment variables:
 2. **Environment Variable: `ALLOWED_EMAILS`**
    - **Value:** A JSON array string containing all authorized email addresses
      - Example: `["user1@example.com","user2@example.com","user3@example.com"]`
-   - **IMPORTANT:** Do NOT commit the email list to version control. Configure it only in your hosting platform's environment variables.
-   - See `ALLOWED_EMAILS.env.example` file for the complete list format
+   - **IMPORTANT:** 
+     - Do NOT commit the email list to version control
+     - The interface gráfica da Vercel has character limits. For large email lists, use **Vercel CLI** (see instructions below)
+     - Copy `ALLOWED_EMAILS.env.example` to `ALLOWED_EMAILS.env` and add your real emails there (this file is in `.gitignore`)
 
 ### Deployment
 
-1. Configure both environment variables (`OCI_UPLOAD_URL` and `ALLOWED_EMAILS`) in your hosting platform
-2. Deploy the application (the method depends on your hosting platform)
-3. The Serverless Functions in the `/api` folder will be automatically deployed
-4. Test the application by:
-   - Validating an email from the allowed list
-   - Recording and uploading a test audio file
+#### Option 1: Using Vercel CLI (Recommended for large email lists)
+
+1. Install Vercel CLI: `npm i -g vercel`
+2. Login: `vercel login`
+3. Copy the example file: `cp ALLOWED_EMAILS.env.example ALLOWED_EMAILS.env`
+4. Edit `ALLOWED_EMAILS.env` and add your real email list
+5. Run the setup script:
+   ```bash
+   chmod +x scripts/setup-vercel-env.sh
+   ./scripts/setup-vercel-env.sh
+   ```
+   Or manually set the variable:
+   ```bash
+   vercel env add ALLOWED_EMAILS production < ALLOWED_EMAILS.env
+   vercel env add ALLOWED_EMAILS preview < ALLOWED_EMAILS.env
+   vercel env add ALLOWED_EMAILS development < ALLOWED_EMAILS.env
+   ```
+6. Configure `OCI_UPLOAD_URL` via CLI or web interface
+7. Deploy: `vercel --prod` or push to trigger automatic deployment
+
+#### Option 2: Using Vercel Web Interface
+
+1. Configure `OCI_UPLOAD_URL` in Settings > Environment Variables
+2. For `ALLOWED_EMAILS`: If your list is small (< 2000 characters), you can paste it directly
+3. If the list is too large, use **Option 1 (CLI)** instead
+4. Deploy the application (push to trigger automatic deployment)
+
+#### Testing
+
+After deployment, test the application by:
+- Validating an email from the allowed list
+- Recording and uploading a test audio file
 
 ## 📁 Project Structure
 
@@ -76,6 +105,7 @@ Before deploying, you need to configure two environment variables:
 ### How It Works
 
 1. **Email Validation:**
+
    - User enters email in frontend
    - Frontend calls `/api/validate-email` (POST)
    - Backend checks against protected list
@@ -214,6 +244,7 @@ To change the app name, edit `manifest.json`:
 ## 🔄 Application Flow
 
 1. **Email Validation:**
+
    - User enters email in frontend
    - Frontend calls `/api/validate-email` (POST)
    - Backend verifies against protected list
@@ -221,6 +252,7 @@ To change the app name, edit `manifest.json`:
    - Error toast appears if email is invalid
 
 2. **Audio Recording:**
+
    - User records audio in browser (MediaRecorder API)
    - Audio is available for preview
 
