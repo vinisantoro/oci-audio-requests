@@ -27,14 +27,15 @@ Before deploying, you need to configure:
 2. **Email List:**
    - Edit the `allowedEmails` array in both `/api/validate-email.js` and `/api/get-upload-url.js`
    - Add or remove authorized email addresses
-   - The list is embedded in the code to prevent it from being exposed as a static file
+   - **IMPORTANT:** Do NOT commit the email list to version control. Add it only in your production environment.
 
 ### Deployment
 
 1. Configure the environment variable in your hosting platform
-2. Deploy the application (the method depends on your hosting platform)
-3. The Serverless Functions in the `/api` folder will be automatically deployed
-4. Test the application by:
+2. Add the allowed email list to both API files (only in production, not in version control)
+3. Deploy the application (the method depends on your hosting platform)
+4. The Serverless Functions in the `/api` folder will be automatically deployed
+5. Test the application by:
    - Validating an email from the allowed list
    - Recording and uploading a test audio file
 
@@ -43,7 +44,7 @@ Before deploying, you need to configure:
 ```
 /
 ├── api/                          # Serverless Functions (Backend)
-│   ├── validate-email.js        # Email validation API (email list embedded in code)
+│   ├── validate-email.js        # Email validation API
 │   └── get-upload-url.js        # API that returns PAR upload URL
 ├── app.js                        # Frontend (no sensitive data)
 ├── pwa.js                        # PWA code (installation and service worker)
@@ -59,8 +60,8 @@ Before deploying, you need to configure:
 
 **Notes:**
 
-- The email list is embedded directly in `validate-email.js` and `get-upload-url.js`. This ensures it's not accessible as a static file, even in local development.
-- No `config.js` file is needed - configuration is done via environment variables.
+- The email list should be added directly in `validate-email.js` and `get-upload-url.js` in production, but NOT committed to version control
+- No `config.js` file is needed - configuration is done via environment variables
 - **PWA:** Icons are included in the project. The application can be installed on the home screen.
 
 ## 🔐 Security Implementation
@@ -93,14 +94,15 @@ To add or remove authorized emails:
 
 1. Edit both `/api/validate-email.js` and `/api/get-upload-url.js`
 2. Add or remove emails from the `allowedEmails` array in both files
-3. Commit and push changes
-4. Your hosting platform will automatically deploy the updates
+3. **IMPORTANT:** Do NOT commit these changes to version control. The email list should only exist in your production environment.
+4. Deploy the updated files to your hosting platform
 
 **Important:**
 
 - The list is embedded in the Serverless Functions code, not as a separate file
 - This ensures it's not accessible as a static file
 - You must update the list in BOTH files (`validate-email.js` and `get-upload-url.js`)
+- **Security:** Never commit the email list to version control. Add it only in production.
 
 ## 🛠️ Local Development
 

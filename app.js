@@ -66,14 +66,14 @@ form.addEventListener("submit", async (event) => {
     const data = await response.json();
 
     if (data.valid) {
-      feedback.textContent =
+    feedback.textContent =
         "E-mail validado com sucesso. Você pode gravar o áudio.";
       feedback.className = "feedback success";
       activeEmail = value;
       revealRecorder();
     } else {
       const errorMessage = data.error || 
-        "Este e-mail não está autorizado. Verifique se digitou exatamente o endereço corporativo aprovado.";
+      "Este e-mail não está autorizado. Verifique se digitou exatamente o endereço corporativo aprovado.";
       feedback.textContent = errorMessage;
       feedback.className = "feedback error";
       showErrorToast(errorMessage);
@@ -88,7 +88,6 @@ form.addEventListener("submit", async (event) => {
       activeEmail = "";
     }
   } catch (error) {
-    console.error("Erro na validação:", error);
     const errorMessage = "Erro ao validar e-mail. Tente novamente.";
     feedback.textContent = errorMessage;
     feedback.className = "feedback error";
@@ -119,16 +118,16 @@ recordBtn.addEventListener("click", () => {
   }
 });
 
-  if (sendBtn) {
-    sendBtn.addEventListener("click", () => {
-      if (sendBtn.disabled) return;
-      if (!latestBlob) {
+if (sendBtn) {
+  sendBtn.addEventListener("click", () => {
+    if (sendBtn.disabled) return;
+    if (!latestBlob) {
         showErrorToast("Grave um áudio antes de tentar enviar.");
-        return;
-      }
-      uploadAudio(latestBlob);
-    });
-  }
+      return;
+    }
+    uploadAudio(latestBlob);
+  });
+}
 
 async function startRecording() {
   try {
@@ -182,7 +181,6 @@ async function startRecording() {
     recordBtn.disabled = false;
     recordStatus.textContent =
       "Não foi possível acessar o microfone. Verifique as permissões.";
-    console.error("Erro ao iniciar gravação", error);
   }
 }
 
@@ -236,7 +234,7 @@ async function uploadAudio(blob) {
         const errorText = await urlResponse.text().catch(() => 'Resposta inválida do servidor');
         throw new Error(`Erro ao processar resposta JSON: ${errorText.substring(0, 100)}`);
       }
-      } else {
+    } else {
       const errorText = await urlResponse.text().catch(() => 'Resposta inválida do servidor');
       throw new Error(`Servidor retornou resposta não-JSON (${urlResponse.status}): ${errorText.substring(0, 200)}`);
     }
@@ -276,7 +274,6 @@ async function uploadAudio(blob) {
       setSendButtonLabel("Enviar gravação");
     }
   } catch (error) {
-    console.error("Erro no upload", error);
     const errorMessage = error.message || "Não foi possível enviar o áudio. Tente novamente.";
     recordStatus.textContent = "Ocorreu um erro durante o upload.";
     uploadStatus.textContent = "";
@@ -414,11 +411,13 @@ function showSuccessToast(message) {
   toast.className = "toast toast-success";
   toast.style.display = "block";
   
+  // Trigger reflow para animação
   void toast.offsetWidth;
   toast.classList.add("show");
   
+  // Remover após 5 segundos
   setTimeout(() => {
-      toast.classList.remove("show");
+    toast.classList.remove("show");
     setTimeout(() => {
       toast.style.display = "none";
     }, 300);
