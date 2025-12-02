@@ -16,26 +16,25 @@ Web application for validating authorized users and uploading audio files to Ora
 
 ### Configuration
 
-Before deploying, you need to configure:
+Before deploying, you need to configure two environment variables:
 
-1. **Environment Variable:**
-   - **Key:** `OCI_UPLOAD_URL`
+1. **Environment Variable: `OCI_UPLOAD_URL`**
    - **Value:** Your complete Pre-Authenticated Request (PAR) endpoint URL
      - Example: `https://objectstorage.sa-saopaulo-1.oraclecloud.com/p/<par-id>/n/<namespace>/b/<bucket>/o/`
    - Make sure this variable is available in all environments (Production, Preview, Development)
 
-2. **Email List:**
-   - Edit the `allowedEmails` array in both `/api/validate-email.js` and `/api/get-upload-url.js`
-   - Add or remove authorized email addresses
-   - **IMPORTANT:** Do NOT commit the email list to version control. Add it only in your production environment.
+2. **Environment Variable: `ALLOWED_EMAILS`**
+   - **Value:** A JSON array string containing all authorized email addresses
+     - Example: `["user1@example.com","user2@example.com","user3@example.com"]`
+   - **IMPORTANT:** Do NOT commit the email list to version control. Configure it only in your hosting platform's environment variables.
+   - See `ALLOWED_EMAILS.env.example` file for the complete list format
 
 ### Deployment
 
-1. Configure the environment variable in your hosting platform
-2. Add the allowed email list to both API files (only in production, not in version control)
-3. Deploy the application (the method depends on your hosting platform)
-4. The Serverless Functions in the `/api` folder will be automatically deployed
-5. Test the application by:
+1. Configure both environment variables (`OCI_UPLOAD_URL` and `ALLOWED_EMAILS`) in your hosting platform
+2. Deploy the application (the method depends on your hosting platform)
+3. The Serverless Functions in the `/api` folder will be automatically deployed
+4. Test the application by:
    - Validating an email from the allowed list
    - Recording and uploading a test audio file
 
@@ -60,19 +59,19 @@ Before deploying, you need to configure:
 
 **Notes:**
 
-- The email list should be added directly in `validate-email.js` and `get-upload-url.js` in production, but NOT committed to version control
-- No `config.js` file is needed - configuration is done via environment variables
+- The email list is configured via the `ALLOWED_EMAILS` environment variable (not in code files)
+- No `config.js` file is needed - all configuration is done via environment variables
 - **PWA:** Icons are included in the project. The application can be installed on the home screen.
 
 ## 🔐 Security Implementation
 
 ### Architecture
 
-- ✅ Email list embedded directly in Serverless Functions (not accessible as static file)
+- ✅ Email list protected in `ALLOWED_EMAILS` environment variable (not exposed in code)
 - ✅ OCI bucket URL protected in `OCI_UPLOAD_URL` environment variable (not exposed)
 - ✅ Email validation performed on the backend
 - ✅ Direct upload to OCI using Pre-Authenticated Request (PAR) URLs
-- ✅ No sensitive data in frontend code
+- ✅ No sensitive data in frontend code or version control
 
 ### How It Works
 
@@ -92,17 +91,20 @@ Before deploying, you need to configure:
 
 To add or remove authorized emails:
 
-1. Edit both `/api/validate-email.js` and `/api/get-upload-url.js`
-2. Add or remove emails from the `allowedEmails` array in both files
-3. **IMPORTANT:** Do NOT commit these changes to version control. The email list should only exist in your production environment.
-4. Deploy the updated files to your hosting platform
+1. Go to your hosting platform's environment variables settings
+2. Edit the `ALLOWED_EMAILS` environment variable
+3. Update the JSON array string with the new list of emails
+   - Example: `["email1@example.com","email2@example.com","newemail@example.com"]`
+4. Save the changes
+5. Redeploy your application (or wait for automatic redeploy if enabled)
 
 **Important:**
 
-- The list is embedded in the Serverless Functions code, not as a separate file
-- This ensures it's not accessible as a static file
-- You must update the list in BOTH files (`validate-email.js` and `get-upload-url.js`)
-- **Security:** Never commit the email list to version control. Add it only in production.
+- The email list is stored only in environment variables, never in code files
+- This ensures it's not accessible as a static file or exposed in version control
+- You only need to update the environment variable (no code changes needed)
+- **Security:** Never commit the email list to version control. It should only exist in your hosting platform's environment variables.
+- See `ALLOWED_EMAILS.env.example` for the complete list format
 
 ## 🛠️ Local Development
 
@@ -233,14 +235,16 @@ To change the app name, edit `manifest.json`:
 
 ### Error: "Email not authorized"
 
-- Verify the email is in the list in `/api/validate-email.js` and `/api/get-upload-url.js`
-- Ensure the email is lowercase in the list
-- Remember to update the list in BOTH files
+- Verify the email is in the `ALLOWED_EMAILS` environment variable
+- Ensure the email is in the JSON array format: `["email1@example.com","email2@example.com"]`
+- Check that the environment variable is properly configured in your hosting platform
+- Ensure the variable is available in the correct environment (Production, Preview, Development)
 
 ### Error: "Server configuration incomplete"
 
-- Verify the `OCI_UPLOAD_URL` environment variable is configured
-- Ensure the variable is available in all environments
+- Verify both `OCI_UPLOAD_URL` and `ALLOWED_EMAILS` environment variables are configured
+- Ensure both variables are available in all environments (Production, Preview, Development)
+- Check that `ALLOWED_EMAILS` is a valid JSON array string
 
 ### Error: "Upload failed"
 

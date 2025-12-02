@@ -1,16 +1,13 @@
-// IMPORTANT: Add your allowed email list here before deploying to production
-// This list should NOT be committed to version control for security reasons
-// The list must match the one in validate-email.js
-// Example:
-// const allowedEmails = [
-//   "user1@example.com",
-//   "user2@example.com",
-// ];
+const allowedEmailsEnv = process.env.ALLOWED_EMAILS;
+let allowedEmails = [];
 
-const allowedEmails = [
-  // Add your allowed emails here (must match validate-email.js)
-  // Example: "user@example.com",
-];
+if (allowedEmailsEnv) {
+  try {
+    allowedEmails = JSON.parse(allowedEmailsEnv);
+  } catch (e) {
+    allowedEmails = [];
+  }
+}
 
 const allowedEmailSet = new Set(
   allowedEmails.map((email) => email.toLowerCase())
