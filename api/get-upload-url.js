@@ -1,4 +1,3 @@
-// Lista de emails permitidos - EMBARCADA NO CÓDIGO (não exposta como arquivo estático)
 const allowedEmails = [
   "alessandra.lima@oracle.com",
   "alex.takata@oracle.com",
@@ -161,17 +160,14 @@ const allowedEmailSet = new Set(
 );
 
 module.exports = async (req, res) => {
-  // Permitir apenas método POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Handle preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -180,7 +176,6 @@ module.exports = async (req, res) => {
     const { email } = req.body;
     const OCI_UPLOAD_URL = process.env.OCI_UPLOAD_URL;
 
-    // Validar email do uploader
     if (!email) {
       return res.status(400).json({ 
         error: 'Email do uploader é obrigatório' 
@@ -195,7 +190,6 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Validar URL do OCI
     if (!OCI_UPLOAD_URL) {
       console.error('OCI_UPLOAD_URL não configurado');
       return res.status(500).json({ 
@@ -203,12 +197,10 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Gerar nome do arquivo
     const safeEmail = normalizedEmail.replace(/[^a-z0-9._-]/g, '-');
     const fileName = `${safeEmail}-${Date.now()}.webm`;
     const encodedName = encodeURIComponent(fileName);
     
-    // Construir URL de upload completa
     const trimmedUrl = OCI_UPLOAD_URL.trim();
     const endsWithSlash = trimmedUrl.endsWith('/');
     const uploadUrl = `${trimmedUrl}${endsWithSlash ? '' : '/'}${encodedName}`;
@@ -227,5 +219,6 @@ module.exports = async (req, res) => {
     });
   }
 };
+
 
 

@@ -1,5 +1,3 @@
-// Configurações sensíveis agora estão no backend (Serverless Functions)
-// A lista de emails e OCI_UPLOAD_URL não são mais expostas no frontend
 const form = document.getElementById("access-form");
 const emailStep = document.getElementById("email-step");
 const emailSummary = document.getElementById("email-summary");
@@ -220,7 +218,6 @@ async function uploadAudio(blob) {
   }
 
   try {
-    // Primeiro, obter a URL de upload do PAR (valida email no backend)
     const urlResponse = await fetch("/api/get-upload-url", {
       method: "POST",
       headers: {
@@ -229,7 +226,6 @@ async function uploadAudio(blob) {
       body: JSON.stringify({ email: activeEmail }),
     });
 
-    // Verificar se a resposta é JSON antes de fazer parse
     const contentType = urlResponse.headers.get('content-type');
     let urlData;
     
@@ -240,8 +236,7 @@ async function uploadAudio(blob) {
         const errorText = await urlResponse.text().catch(() => 'Resposta inválida do servidor');
         throw new Error(`Erro ao processar resposta JSON: ${errorText.substring(0, 100)}`);
       }
-    } else {
-      // Se não for JSON, ler como texto
+      } else {
       const errorText = await urlResponse.text().catch(() => 'Resposta inválida do servidor');
       throw new Error(`Servidor retornou resposta não-JSON (${urlResponse.status}): ${errorText.substring(0, 200)}`);
     }
@@ -254,7 +249,6 @@ async function uploadAudio(blob) {
       throw new Error('URL de upload não retornada pelo servidor');
     }
 
-    // Agora fazer upload direto para OCI (sem passar pelo servidor Vercel)
     uploadStatus.textContent = "Enviando gravação para o bucket OCI...";
     
     const uploadResponse = await fetch(urlData.uploadUrl, {
@@ -295,15 +289,11 @@ async function uploadAudio(blob) {
   }
 }
 
-// Função blobToBase64 removida - envio direto do blob via fetch
-
 function formatTime(totalSeconds) {
   const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
   const seconds = String(totalSeconds % 60).padStart(2, "0");
   return `${minutes}:${seconds}`;
 }
-
-// Função buildUploadUrl removida - upload agora é feito via API backend
 
 function updatePreview(blob) {
   if (!previewPanel || !previewAudio || !blob) {
@@ -411,7 +401,6 @@ function generateFileName(emailAddress) {
 function showSuccessToast(message) {
   if (!message) return;
   
-  // Criar elemento de toast se não existir
   let toast = document.getElementById("toast");
   if (!toast) {
     toast = document.createElement("div");
@@ -425,23 +414,20 @@ function showSuccessToast(message) {
   toast.className = "toast toast-success";
   toast.style.display = "block";
   
-  // Trigger reflow para animação
   void toast.offsetWidth;
   toast.classList.add("show");
   
-  // Remover após 5 segundos
   setTimeout(() => {
-    toast.classList.remove("show");
+      toast.classList.remove("show");
     setTimeout(() => {
       toast.style.display = "none";
-    }, 300); // Aguardar animação de saída
+    }, 300);
   }, 5000);
 }
 
 function showErrorToast(message) {
   if (!message) return;
   
-  // Criar elemento de toast se não existir
   let toast = document.getElementById("toast");
   if (!toast) {
     toast = document.createElement("div");
@@ -455,15 +441,13 @@ function showErrorToast(message) {
   toast.className = "toast toast-error";
   toast.style.display = "block";
   
-  // Trigger reflow para animação
   void toast.offsetWidth;
   toast.classList.add("show");
   
-  // Remover após 5 segundos
   setTimeout(() => {
     toast.classList.remove("show");
     setTimeout(() => {
       toast.style.display = "none";
-    }, 300); // Aguardar animação de saída
+    }, 300);
   }, 5000);
 }

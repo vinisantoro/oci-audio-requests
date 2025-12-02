@@ -1,4 +1,3 @@
-// Lista de emails permitidos - EMBARCADA NO CÓDIGO (não exposta como arquivo estático)
 const allowedEmails = [
   "alessandra.lima@oracle.com",
   "alex.takata@oracle.com",
@@ -161,17 +160,14 @@ const allowedEmailSet = new Set(
 );
 
 module.exports = async (req, res) => {
-  // Permitir apenas método POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // CORS headers para permitir requisições do frontend
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Handle preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -188,7 +184,6 @@ module.exports = async (req, res) => {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Validar formato básico de email
     if (!normalizedEmail.includes('@oracle.com')) {
       return res.status(200).json({ 
         valid: false, 
@@ -196,7 +191,6 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Verificar se está na lista permitida (sem expor a lista)
     const isValid = allowedEmailSet.has(normalizedEmail);
 
     if (isValid) {

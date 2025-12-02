@@ -63,10 +63,7 @@ Após o deploy, teste:
 /
 ├── api/                          # Serverless Functions (Backend)
 │   ├── validate-email.js        # API de validação (lista embarcada no código)
-│   ├── upload.js                # API de upload (lista embarcada no código)
-│   └── upload.config.js         # Configuração da função de upload
-├── lib/                          # Bibliotecas do backend
-│   └── allowed-emails.js        # Lista de emails (não servida como estático)
+│   └── get-upload-url.js        # API que retorna URL de upload PAR
 ├── app.js                        # Frontend (sem dados sensíveis)
 ├── pwa.js                        # Código PWA (instalação e service worker)
 ├── sw.js                         # Service Worker (cache e offline)
@@ -178,6 +175,7 @@ A aplicação pode ser instalada na tela inicial do celular (Android e iOS), fun
 6. O ícone aparecerá na tela inicial
 
 **Se o prompt não aparecer:**
+
 - Toque nos **3 pontos** (menu) → **"Instalar app"** ou **"Adicionar à tela inicial"**
 
 #### iOS (iPhone/iPad) - Apenas Safari
@@ -194,6 +192,7 @@ A aplicação pode ser instalada na tela inicial do celular (Android e iOS), fun
 ### Ícones PWA
 
 Os ícones já estão incluídos no projeto:
+
 - `icon-192.png` (192x192 pixels)
 - `icon-512.png` (512x512 pixels)
 - `icon-oracle.svg` (fonte SVG)
@@ -206,8 +205,8 @@ Para alterar cores do tema, edite `manifest.json`:
 
 ```json
 {
-  "theme_color": "#c74634",      // Cor da barra de status
-  "background_color": "#f4f2f0"   // Cor de fundo ao abrir
+  "theme_color": "#c74634", // Cor da barra de status
+  "background_color": "#f4f2f0" // Cor de fundo ao abrir
 }
 ```
 
@@ -215,8 +214,8 @@ Para alterar o nome do app, edite `manifest.json`:
 
 ```json
 {
-  "name": "Oracle Audio Requests",  // Nome completo
-  "short_name": "Audio Requests"   // Nome curto (tela inicial)
+  "name": "Oracle Audio Requests", // Nome completo
+  "short_name": "Audio Requests" // Nome curto (tela inicial)
 }
 ```
 
@@ -234,6 +233,7 @@ Para alterar o nome do app, edite `manifest.json`:
 ## 🔄 Fluxo da Aplicação
 
 1. **Validação de Email:**
+
    - Usuário digita email no frontend
    - Frontend chama `/api/validate-email` (POST)
    - Backend verifica contra lista protegida
@@ -241,6 +241,7 @@ Para alterar o nome do app, edite `manifest.json`:
    - Toast de erro aparece se email inválido
 
 2. **Gravação de Áudio:**
+
    - Usuário grava áudio no navegador (MediaRecorder API)
    - Áudio fica disponível para pré-escuta
 
