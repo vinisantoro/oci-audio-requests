@@ -411,11 +411,9 @@ function showSuccessToast(message) {
   toast.className = "toast toast-success";
   toast.style.display = "block";
   
-  // Trigger reflow para animação
   void toast.offsetWidth;
   toast.classList.add("show");
   
-  // Remover após 5 segundos
   setTimeout(() => {
     toast.classList.remove("show");
     setTimeout(() => {
