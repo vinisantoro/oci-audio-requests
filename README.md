@@ -1,304 +1,282 @@
-# Oracle Audio Requests
+# Audio Upload Application
 
-Aplicação web para validação de colaboradores Oracle e envio de áudios para um bucket no Oracle Cloud Infrastructure (OCI).
+Web application for validating authorized users and uploading audio files to Oracle Cloud Infrastructure (OCI) Object Storage.
 
-**🔒 Segurança:** A lista de emails permitidos e a URL do bucket OCI estão protegidas no backend (Serverless Functions), não sendo mais expostas no código do frontend.
+**🔒 Security:** The allowed email list and OCI bucket URL are protected in the backend (Serverless Functions), not exposed in the frontend code.
 
-**📱 PWA:** Aplicação pode ser instalada na tela inicial do celular, funcionando como um app nativo (Android e iOS).
+**📱 PWA:** The application can be installed on the home screen of mobile devices, functioning as a native app (Android and iOS).
 
-## 🚀 Deploy na Vercel (Plano Gratuito)
+## 🚀 Getting Started
 
-**⚠️ IMPORTANTE:** Configure a variável de ambiente na Vercel ANTES de fazer o deploy!
+### Prerequisites
 
-### Passo 1: Configurar Variável de Ambiente (OBRIGATÓRIO)
+- A hosting platform that supports Serverless Functions (e.g., Vercel, Netlify, AWS Lambda, etc.)
+- An Oracle Cloud Infrastructure account with Object Storage configured
+- A Pre-Authenticated Request (PAR) URL for direct uploads to OCI
 
-**Faça isso PRIMEIRO, antes do push/commit:**
+### Configuration
 
-1. Acesse o painel da Vercel: [vercel.com](https://vercel.com)
-2. Selecione seu projeto (ou crie um novo conectando ao repositório GitHub)
-3. Vá em **Settings** > **Environment Variables**
-4. Clique em **Add New** e preencha:
+Before deploying, you need to configure:
+
+1. **Environment Variable:**
    - **Key:** `OCI_UPLOAD_URL`
-   - **Value:** Seu endpoint completo do Pre-Authenticated Request (PAR) do OCI
-     - Exemplo: `https://objectstorage.sa-saopaulo-1.oraclecloud.com/p/<par-id>/n/<namespace>/b/<bucket>/o/`
-   - ✅ Marque todos: **Production**, **Preview**, **Development**
-5. Clique em **Save**
+   - **Value:** Your complete Pre-Authenticated Request (PAR) endpoint URL
+     - Example: `https://objectstorage.sa-saopaulo-1.oraclecloud.com/p/<par-id>/n/<namespace>/b/<bucket>/o/`
+   - Make sure this variable is available in all environments (Production, Preview, Development)
 
-### Passo 2: Configurar Build Settings
+2. **Email List:**
+   - Edit the `allowedEmails` array in both `/api/validate-email.js` and `/api/get-upload-url.js`
+   - Add or remove authorized email addresses
+   - The list is embedded in the code to prevent it from being exposed as a static file
 
-1. No painel do projeto, vá em **Settings** > **General**
-2. Verifique/Configure:
-   - **Framework Preset:** `Other`
-   - **Build Command:** (deixe vazio - **não precisa mais do script inject-config.js**)
-   - **Output Directory:** `.`
-   - **Install Command:** (deixe vazio)
+### Deployment
 
-**Nota:** Anteriormente era necessário usar o script `inject-config.js` para gerar o `config.js`, mas isso não é mais necessário. A configuração agora é feita apenas via variável de ambiente `OCI_UPLOAD_URL`.
+1. Configure the environment variable in your hosting platform
+2. Deploy the application (the method depends on your hosting platform)
+3. The Serverless Functions in the `/api` folder will be automatically deployed
+4. Test the application by:
+   - Validating an email from the allowed list
+   - Recording and uploading a test audio file
 
-### Passo 3: Fazer Deploy (Push/Commit)
-
-1. Faça commit e push das alterações para o GitHub:
-
-   ```bash
-   git add .
-   git commit -m "Implementar segurança com Serverless Functions"
-   git push origin main
-   ```
-
-2. A Vercel detectará automaticamente e fará o deploy
-3. As Serverless Functions serão criadas automaticamente na pasta `/api`
-4. Aguarde o deploy completar (1-2 minutos)
-
-### ✅ Verificação
-
-Após o deploy, teste:
-
-- Acesse sua URL da Vercel
-- Tente validar um email da lista permitida
-- Grave e envie um áudio de teste
-
-## 📁 Estrutura do Projeto
+## 📁 Project Structure
 
 ```
 /
 ├── api/                          # Serverless Functions (Backend)
-│   ├── validate-email.js        # API de validação (lista embarcada no código)
-│   └── get-upload-url.js        # API que retorna URL de upload PAR
-├── app.js                        # Frontend (sem dados sensíveis)
-├── pwa.js                        # Código PWA (instalação e service worker)
-├── sw.js                         # Service Worker (cache e offline)
-├── manifest.json                 # Manifest PWA (configuração do app)
-├── icon-192.png                  # Ícone PWA 192x192
-├── icon-512.png                  # Ícone PWA 512x512
-├── icon-oracle.svg               # SVG fonte dos ícones
-├── index.html                    # Interface HTML
-├── styles.css                    # Estilos
-└── vercel.json                   # Configuração da Vercel
+│   ├── validate-email.js        # Email validation API (email list embedded in code)
+│   └── get-upload-url.js        # API that returns PAR upload URL
+├── app.js                        # Frontend (no sensitive data)
+├── pwa.js                        # PWA code (installation and service worker)
+├── sw.js                         # Service Worker (caching and offline support)
+├── manifest.json                 # PWA manifest (app configuration)
+├── icon-192.png                  # PWA icon 192x192
+├── icon-512.png                  # PWA icon 512x512
+├── icon-oracle.svg               # SVG source for icons
+├── index.html                    # HTML interface
+├── styles.css                    # Styles
+└── vercel.json                   # Platform-specific configuration (if applicable)
 ```
 
-**Nota:**
+**Notes:**
 
-- A lista de emails está embarcada diretamente nos arquivos `validate-email.js` e `upload.js`. Isso garante que não seja acessível como arquivo estático, mesmo em desenvolvimento local.
-- **Não é mais necessário** o arquivo `config.js` nem o script `inject-config.js`. A configuração do OCI é feita apenas via variável de ambiente na Vercel.
-- **PWA:** Os ícones já estão incluídos no projeto. A aplicação pode ser instalada na tela inicial.
+- The email list is embedded directly in `validate-email.js` and `get-upload-url.js`. This ensures it's not accessible as a static file, even in local development.
+- No `config.js` file is needed - configuration is done via environment variables.
+- **PWA:** Icons are included in the project. The application can be installed on the home screen.
 
-## 🔐 Segurança Implementada
+## 🔐 Security Implementation
 
-### Antes (❌ Inseguro)
+### Architecture
 
-- Lista de emails exposta no `app.js` (visível no navegador)
-- URL do bucket OCI exposta no `config.js` (visível no navegador)
-- Script `inject-config.js` gerava o `config.js` durante o build
+- ✅ Email list embedded directly in Serverless Functions (not accessible as static file)
+- ✅ OCI bucket URL protected in `OCI_UPLOAD_URL` environment variable (not exposed)
+- ✅ Email validation performed on the backend
+- ✅ Direct upload to OCI using Pre-Authenticated Request (PAR) URLs
+- ✅ No sensitive data in frontend code
 
-**Arquivos removidos:** `config.js` e `scripts/inject-config.js` não são mais necessários.
+### How It Works
 
-### Agora (✅ Seguro)
+1. **Email Validation:**
+   - User enters email in frontend
+   - Frontend calls `/api/validate-email` (POST)
+   - Backend checks against protected list
+   - Returns `valid: true/false` without exposing the list
 
-- ✅ Lista de emails embarcada diretamente nas Serverless Functions (não acessível como arquivo estático)
-- ✅ URL do bucket OCI protegida em variável de ambiente `OCI_UPLOAD_URL` (não exposta)
-- ✅ Validação de email feita no backend
-- ✅ Upload passa por proxy no backend
-- ✅ **Não precisa mais de `config.js`** - configuração apenas via variável de ambiente
-- ✅ **Não precisa mais de `inject-config.js`** - sem Build Command necessário
+2. **Upload:**
+   - Frontend calls `/api/get-upload-url` (POST) with email
+   - Backend validates email and returns PAR URL for upload
+   - Frontend uploads **directly** to OCI using the PAR URL (PUT)
+   - Upload bypasses the server, avoiding timeout issues for large files
 
-## 📝 Gerenciar Lista de Emails
+## 📝 Managing Email List
 
-Para adicionar ou remover emails autorizados:
+To add or remove authorized emails:
 
-1. Edite os arquivos `/api/validate-email.js` e `/api/get-upload-url.js`
-2. Adicione ou remova emails do array `allowedEmails` em ambos os arquivos
-3. Faça commit e push
-4. A Vercel fará deploy automático
+1. Edit both `/api/validate-email.js` and `/api/get-upload-url.js`
+2. Add or remove emails from the `allowedEmails` array in both files
+3. Commit and push changes
+4. Your hosting platform will automatically deploy the updates
 
-**Importante:**
+**Important:**
 
-- A lista está embarcada no código das Serverless Functions, não como arquivo separado
-- Isso garante que não seja acessível como arquivo estático
-- Você precisa atualizar a lista nos dois arquivos (`validate-email.js` e `upload.js`)
+- The list is embedded in the Serverless Functions code, not as a separate file
+- This ensures it's not accessible as a static file
+- You must update the list in BOTH files (`validate-email.js` and `get-upload-url.js`)
 
-## 🛠️ Desenvolvimento Local
+## 🛠️ Local Development
 
-### Opção 1: Usando Vercel CLI (Recomendado)
+### Option 1: Using Platform CLI (Recommended)
+
+If your hosting platform provides a CLI (e.g., Vercel CLI, Netlify CLI):
 
 ```bash
-# Instalar Vercel CLI
-npm i -g vercel
+# Install platform CLI
+npm i -g <platform-cli>
 
-# Fazer login
-vercel login
+# Login
+<platform-cli> login
 
-# Configurar variáveis de ambiente localmente
-vercel env pull .env.local
+# Pull environment variables locally
+<platform-cli> env pull .env.local
 
-# Rodar localmente
-vercel dev
+# Run locally
+<platform-cli> dev
 ```
 
-A aplicação estará disponível em `http://localhost:3000`
+The application will be available at `http://localhost:3000` (or the port specified by your platform)
 
-### Opção 2: Simular APIs Localmente
+### Option 2: Static Server (Limited Functionality)
 
-Para testar sem a Vercel, você pode usar um servidor local simples:
+For basic frontend testing without backend APIs:
 
 ```bash
-# Usar um servidor estático simples
+# Use a simple static server
 npx serve .
 ```
 
-**Nota:** As APIs serverless só funcionam completamente quando deployadas na Vercel ou usando `vercel dev`.
+**Note:** Serverless Functions APIs will only work completely when deployed or using the platform's local development server.
 
 ## 📱 PWA (Progressive Web App)
 
-A aplicação pode ser instalada na tela inicial do celular (Android e iOS), funcionando como um aplicativo nativo.
+The application can be installed on the home screen of mobile devices (Android and iOS), functioning as a native application.
 
-### Funcionalidades PWA
+### PWA Features
 
-- ✅ Instalação na tela inicial
-- ✅ Funciona offline (após primeira visita)
-- ✅ Abre em tela cheia (sem barra do navegador)
-- ✅ Ícone personalizado na tela inicial
-- ✅ Prompt de instalação customizado
+- ✅ Home screen installation
+- ✅ Offline functionality (after first visit)
+- ✅ Full-screen mode (no browser bar)
+- ✅ Custom icon on home screen
+- ✅ Custom install prompt
 
-### Como Testar no Telefone
+### Testing on Mobile
 
 #### Android (Chrome/Edge)
 
-1. Abra o **Chrome** ou **Edge** no celular
-2. Acesse: `http://myrequest.dailybits.tech/` (ou sua URL da Vercel)
-3. Aguarde alguns segundos - um banner aparecerá na parte inferior:
+1. Open **Chrome** or **Edge** on your mobile device
+2. Navigate to your application URL
+3. Wait a few seconds - a banner will appear at the bottom:
    ```
-   Instale este app na sua tela inicial para acesso rápido!
-   [Instalar] [Agora não]
+   Install this app on your home screen for quick access!
+   [Install] [Not now]
    ```
-4. Toque em **"Instalar"**
-5. Confirme quando o sistema perguntar
-6. O ícone aparecerá na tela inicial
+4. Tap **"Install"**
+5. Confirm when the system prompts
+6. The icon will appear on your home screen
 
-**Se o prompt não aparecer:**
+**If the prompt doesn't appear:**
 
-- Toque nos **3 pontos** (menu) → **"Instalar app"** ou **"Adicionar à tela inicial"**
+- Tap the **3 dots** (menu) → **"Install app"** or **"Add to home screen"**
 
-#### iOS (iPhone/iPad) - Apenas Safari
+#### iOS (iPhone/iPad) - Safari Only
 
-**⚠️ IMPORTANTE:** No iOS, PWA só funciona no Safari. Chrome/Firefox/Edge não suportam.
+**⚠️ IMPORTANT:** On iOS, PWA only works in Safari. Chrome/Firefox/Edge do not support it.
 
-1. Abra o **Safari** (não funciona no Chrome/Firefox no iOS)
-2. Acesse: `http://myrequest.dailybits.tech/` (ou sua URL da Vercel)
-3. Toque no **botão de compartilhar** (quadrado com seta para cima)
-4. Role para baixo e toque em **"Adicionar à Tela de Início"**
-5. Confirme
-6. O ícone aparecerá na tela inicial
+1. Open **Safari** (does not work in Chrome/Firefox on iOS)
+2. Navigate to your application URL
+3. Tap the **share button** (square with upward arrow)
+4. Scroll down and tap **"Add to Home Screen"**
+5. Confirm
+6. The icon will appear on your home screen
 
-### Ícones PWA
+### PWA Icons
 
-Os ícones já estão incluídos no projeto:
+Icons are included in the project:
 
 - `icon-192.png` (192x192 pixels)
 - `icon-512.png` (512x512 pixels)
-- `icon-oracle.svg` (fonte SVG)
+- `icon-oracle.svg` (SVG source)
 
-Se precisar regenerar os ícones, use o arquivo `icon-oracle.svg` como base e converta para PNG nos tamanhos necessários.
+To regenerate icons, use the `icon-oracle.svg` file as a base and convert to PNG at the required sizes.
 
-### Personalização PWA
+### Customizing PWA
 
-Para alterar cores do tema, edite `manifest.json`:
-
-```json
-{
-  "theme_color": "#c74634", // Cor da barra de status
-  "background_color": "#f4f2f0" // Cor de fundo ao abrir
-}
-```
-
-Para alterar o nome do app, edite `manifest.json`:
+To change theme colors, edit `manifest.json`:
 
 ```json
 {
-  "name": "Oracle Audio Requests", // Nome completo
-  "short_name": "Audio Requests" // Nome curto (tela inicial)
+  "theme_color": "#c74634",
+  "background_color": "#f4f2f0"
 }
 ```
 
-## 📊 Limites do Plano Gratuito da Vercel
+To change the app name, edit `manifest.json`:
 
-- ✅ **100 GB de bandwidth** por mês
-- ✅ **100 horas de execução** de funções por mês
-- ✅ **Sem limite de invocações** (removido recentemente)
-- ✅ **Timeout de 10 segundos** por função
+```json
+{
+  "name": "Audio Upload App",
+  "short_name": "Audio App"
+}
+```
 
-**Estimativa de uso:** Para uso moderado (dezenas de uploads por dia), você ficará bem dentro do plano gratuito.
+## 🔄 Application Flow
 
-**Nota sobre uploads grandes:** A aplicação usa upload direto para OCI (sem passar pelo servidor Vercel), permitindo uploads de qualquer tamanho sem problemas de timeout. Apenas a validação de email passa pelo servidor, que é uma operação rápida.
+1. **Email Validation:**
+   - User enters email in frontend
+   - Frontend calls `/api/validate-email` (POST)
+   - Backend verifies against protected list
+   - Returns `valid: true/false` without exposing the list
+   - Error toast appears if email is invalid
 
-## 🔄 Fluxo da Aplicação
-
-1. **Validação de Email:**
-
-   - Usuário digita email no frontend
-   - Frontend chama `/api/validate-email` (POST)
-   - Backend verifica contra lista protegida
-   - Retorna `valid: true/false` sem expor a lista
-   - Toast de erro aparece se email inválido
-
-2. **Gravação de Áudio:**
-
-   - Usuário grava áudio no navegador (MediaRecorder API)
-   - Áudio fica disponível para pré-escuta
+2. **Audio Recording:**
+   - User records audio in browser (MediaRecorder API)
+   - Audio is available for preview
 
 3. **Upload:**
-   - Frontend chama `/api/get-upload-url` (POST) com o email
-   - Backend valida email e retorna URL do PAR para upload
-   - Frontend faz upload **direto** para OCI usando a URL do PAR (PUT)
-   - O upload não passa pelo servidor Vercel, evitando timeout para arquivos grandes
-   - Toast de sucesso/erro aparece conforme resultado
+   - Frontend calls `/api/get-upload-url` (POST) with email
+   - Backend validates email and returns PAR URL for upload
+   - Frontend uploads **directly** to OCI using PAR URL (PUT)
+   - Upload bypasses the server, avoiding timeout for large files
+   - Success/error toast appears based on result
 
 ## 🐛 Troubleshooting
 
-### Erro: "Email não autorizado"
+### Error: "Email not authorized"
 
-- Verifique se o email está na lista em `/api/validate-email.js` e `/api/get-upload-url.js`
-- Certifique-se de que o email está em minúsculas na lista
-- Lembre-se de atualizar a lista nos DOIS arquivos
+- Verify the email is in the list in `/api/validate-email.js` and `/api/get-upload-url.js`
+- Ensure the email is lowercase in the list
+- Remember to update the list in BOTH files
 
-### Erro: "Configuração do servidor incompleta"
+### Error: "Server configuration incomplete"
 
-- Verifique se a variável `OCI_UPLOAD_URL` está configurada na Vercel
-- Certifique-se de que a variável está disponível para todos os ambientes
+- Verify the `OCI_UPLOAD_URL` environment variable is configured
+- Ensure the variable is available in all environments
 
-### Erro: "Falha no upload"
+### Error: "Upload failed"
 
-- Verifique se o PAR do OCI está ativo e tem permissão de escrita
-- Verifique os logs da Vercel em **Deployments** > **Functions** > **View Function Logs**
-- O upload é feito diretamente do navegador para OCI, então verifique também o console do navegador para erros de CORS ou rede
+- Verify the OCI PAR is active and has write permissions
+- Check your hosting platform's function logs
+- Since upload is done directly from browser to OCI, also check the browser console for CORS or network errors
 
-### APIs não funcionam localmente
+### APIs don't work locally
 
-- Use `vercel dev` para rodar as Serverless Functions localmente
-- Ou faça deploy na Vercel para testar completamente
+- Use your platform's local development server (e.g., `vercel dev`, `netlify dev`)
+- Or deploy to your hosting platform for complete testing
 
-### PWA não funciona no iOS
+### PWA doesn't work on iOS
 
-- **Use apenas o Safari** - Chrome/Firefox/Edge no iOS não suportam PWA
-- Verifique se está acessando via HTTPS (obrigatório para PWA)
-- Limpe o cache do Safari se necessário
+- **Use Safari only** - Chrome/Firefox/Edge on iOS do not support PWA
+- Verify you're accessing via HTTPS (required for PWA)
+- Clear Safari cache if necessary
 
-### Prompt de instalação não aparece
+### Install prompt doesn't appear
 
-- Verifique se está em HTTPS (obrigatório)
-- Verifique o console do navegador para erros
-- Alguns navegadores só mostram após várias visitas
-- No Android, use o menu do navegador (3 pontos → Instalar app)
+- Verify you're on HTTPS (required)
+- Check browser console for errors
+- Some browsers only show after multiple visits
+- On Android, use the browser menu (3 dots → Install app)
 
-### Ícones não aparecem
+### Icons don't appear
 
-- Verifique se os arquivos `icon-192.png` e `icon-512.png` estão na raiz do projeto
-- Verifique se os caminhos no `manifest.json` estão corretos
-- Limpe o cache do navegador
+- Verify `icon-192.png` and `icon-512.png` files are in the project root
+- Verify paths in `manifest.json` are correct
+- Clear browser cache
 
-## 📚 Recursos
+## 📚 Resources
 
-- [Documentação da Vercel](https://vercel.com/docs)
-- [Serverless Functions da Vercel](https://vercel.com/docs/functions)
 - [Oracle Cloud Infrastructure - Object Storage](https://docs.oracle.com/en-us/iaas/Content/Object/Concepts/objectstorageoverview.htm)
 - [Progressive Web Apps - MDN](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
 - [PWA Builder](https://www.pwabuilder.com/)
+- [MediaRecorder API - MDN](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder)
+
+## 📄 License
+
+This project is open source and available for anyone to implement their own version.
