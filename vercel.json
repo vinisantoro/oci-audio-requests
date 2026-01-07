@@ -1,12 +1,3 @@
 {
-  "outputDirectory": ".",
-  "git": {
-    "deploymentEnabled": {
-      "main": true,
-      "feature/saml-sso-authentication": true
-    }
-  },
-  "domains": [
-    "notes.dailybits.tech"
-  ]
+  "outputDirectory": "."
 }
