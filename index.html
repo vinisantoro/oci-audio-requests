@@ -58,42 +58,23 @@
 
     <main class="card" aria-live="polite">
       <section class="step" id="email-step">
-        <!-- <div>
-          <p class="eyebrow">Passo 1</p>
-          <h1>Confirme seu e-mail</h1>
-          <p class="lead">
-            Por segurança, apenas colaboradores com endereço corporativo Oracle
-            podem enviar áudios.
-          </p>
-        </div> -->
         <form id="access-form" class="email-form" novalidate>
-          <label for="email">E-mail corporativo</label>
-          <div class="input-row">
-            <input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="email@company.com"
-              required
-              autocomplete="email"
-            />
-            <button type="submit" class="primary" aria-live="off">
-              Validar
-            </button>
-          </div>
-          <p id="email-feedback" class="feedback" role="status"></p>
+          <!-- Content will be dynamically replaced by app.js for SSO login -->
         </form>
       </section>
 
-      <!-- <section class="step is-hidden" id="email-summary">
+      <section class="step is-hidden" id="email-summary">
         <div>
           <p class="eyebrow">Acesso autorizado</p>
           <h2 id="active-email-label"></h2>
           <p class="lead">
-            Verificamos sua identidade corporativa. Agora é só gravar.
+            Autenticado via SSO corporativo. Agora é só gravar.
           </p>
+          <button id="logout-btn" class="secondary" style="margin-top: 1rem;" type="button">
+            Sair
+          </button>
         </div>
-      </section> -->
+      </section>
 
       <section class="step recorder is-hidden" aria-disabled="true">
         <!-- <div>

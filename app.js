@@ -1,8 +1,6 @@
-const form = document.getElementById("access-form");
 const emailStep = document.getElementById("email-step");
 const emailSummary = document.getElementById("email-summary");
 const activeEmailLabel = document.getElementById("active-email-label");
-const emailInput = document.getElementById("email");
 const feedback = document.getElementById("email-feedback");
 const recordBtn = document.getElementById("record-btn");
 const recordStatus = document.getElementById("record-status");
@@ -21,7 +19,7 @@ let mediaStream;
 let chunks = [];
 let timerInterval;
 let elapsedSeconds = 0;
-let activeEmail = "";
+let currentUser = null;
 let lastAudioUrl = "";
 let latestBlob = null;
 
@@ -30,84 +28,140 @@ if (yearSpan) {
 }
 
 if (!navigator.mediaDevices || typeof MediaRecorder === "undefined") {
-  recordBtn.disabled = true;
-  recordStatus.textContent =
-    "Seu navegador não suporta gravação de áudio. Utilize a versão mais recente do Chrome ou Edge.";
+  if (recordBtn) {
+    recordBtn.disabled = true;
+  }
+  if (recordStatus) {
+    recordStatus.textContent =
+      "Seu navegador não suporta gravação de áudio. Utilize a versão mais recente do Chrome ou Edge.";
+  }
 }
 
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const value = emailInput.value.trim();
-  
-  if (!value) {
-    feedback.textContent = "Por favor, informe um e-mail.";
-    feedback.className = "feedback error";
-    return;
-  }
-
-  // Desabilitar botão durante validação
-  const submitBtn = form.querySelector('button[type="submit"]');
-  if (submitBtn) {
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Validando...";
-  }
-  feedback.textContent = "Validando e-mail...";
-  feedback.className = "feedback";
-
+/**
+ * Check authentication status
+ */
+async function checkAuthStatus() {
   try {
-    const response = await fetch("/api/validate-email", {
-      method: "POST",
+    const response = await fetch("/api/auth/status", {
+      method: "GET",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email: value }),
     });
 
     const data = await response.json();
-
-    if (data.valid) {
-    feedback.textContent =
-        "E-mail validado com sucesso. Você pode gravar o áudio.";
-      feedback.className = "feedback success";
-      activeEmail = value;
-      revealRecorder();
-    } else {
-      const errorMessage = data.error || 
-      "Este e-mail não está autorizado. Verifique se digitou exatamente o endereço corporativo aprovado.";
-      feedback.textContent = errorMessage;
-      feedback.className = "feedback error";
-      showErrorToast(errorMessage);
-      recordBtn.disabled = true;
-      if (sendBtn) {
-        sendBtn.disabled = true;
-      }
-      recorderSection.setAttribute("aria-disabled", "true");
-      recorderSection.classList.add("is-hidden");
-      resetPreview();
-      showEmailForm();
-      activeEmail = "";
+    
+    if (data.authenticated && data.user) {
+      currentUser = data.user;
+      return true;
     }
+    
+    return false;
   } catch (error) {
-    const errorMessage = "Erro ao validar e-mail. Tente novamente.";
-    feedback.textContent = errorMessage;
-    feedback.className = "feedback error";
-    showErrorToast(errorMessage);
-    recordBtn.disabled = true;
-    if (sendBtn) {
-      sendBtn.disabled = true;
-    }
-    recorderSection.setAttribute("aria-disabled", "true");
-    recorderSection.classList.add("is-hidden");
-    resetPreview();
+    console.error("Error checking auth status:", error);
+    return false;
+  }
+}
+
+/**
+ * Initiate SSO login
+ */
+function initiateSSOLogin() {
+  window.location.href = "/api/saml/login";
+}
+
+/**
+ * Handle logout
+ */
+async function handleLogout() {
+  try {
+    await fetch("/api/saml/logout", {
+      method: "GET",
+      credentials: "include",
+    });
+    
+    currentUser = null;
     showEmailForm();
-    activeEmail = "";
-  } finally {
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Validar";
+    showSuccessToast("Logout realizado com sucesso.");
+  } catch (error) {
+    console.error("Logout error:", error);
+    // Still clear local state
+    currentUser = null;
+    showEmailForm();
+  }
+}
+
+/**
+ * Initialize application
+ */
+async function init() {
+  const isAuthenticated = await checkAuthStatus();
+  
+  if (isAuthenticated) {
+    revealRecorder();
+    if (activeEmailLabel && currentUser) {
+      activeEmailLabel.textContent = currentUser.email;
+    }
+  } else {
+    // Check if we're coming back from SAML callback (URL might have params)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has("saml") || window.location.pathname.includes("callback")) {
+      // Wait a bit for cookie to be set, then check again
+      setTimeout(async () => {
+        const authenticated = await checkAuthStatus();
+        if (authenticated) {
+          revealRecorder();
+          // Clean URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else {
+          showLoginPrompt();
+        }
+      }, 500);
+    } else {
+      showLoginPrompt();
     }
   }
-});
+}
+
+/**
+ * Show login prompt
+ */
+function showLoginPrompt() {
+  if (emailStep) {
+    emailStep.classList.remove("is-hidden");
+    
+    // Replace form content with SSO login button
+    const form = document.getElementById("access-form");
+    if (form) {
+      form.innerHTML = `
+        <div style="text-align: center;">
+          <p class="lead" style="margin-bottom: 1.5rem;">
+            Por segurança, apenas colaboradores autenticados via SSO corporativo podem enviar áudios.
+          </p>
+          <button type="button" id="sso-login-btn" class="primary" style="width: 100%; max-width: 300px;">
+            Entrar com SSO Corporativo
+          </button>
+        </div>
+        <p id="email-feedback" class="feedback" role="status"></p>
+      `;
+      
+      const ssoBtn = document.getElementById("sso-login-btn");
+      if (ssoBtn) {
+        ssoBtn.addEventListener("click", initiateSSOLogin);
+      }
+    }
+  }
+  
+  if (recorderSection) {
+    recorderSection.setAttribute("aria-disabled", "true");
+    recorderSection.classList.add("is-hidden");
+  }
+  
+  if (recordStatus) {
+    recordStatus.textContent = "Aguardando autenticação SSO.";
+  }
+}
 
 recordBtn.addEventListener("click", () => {
   if (recordBtn.disabled) return;
@@ -122,7 +176,7 @@ if (sendBtn) {
   sendBtn.addEventListener("click", () => {
     if (sendBtn.disabled) return;
     if (!latestBlob) {
-        showErrorToast("Grave um áudio antes de tentar enviar.");
+      showErrorToast("Grave um áudio antes de tentar enviar.");
       return;
     }
     uploadAudio(latestBlob);
@@ -133,12 +187,16 @@ async function startRecording() {
   try {
     resetPreview();
     recordBtn.disabled = true;
-    recordStatus.textContent = "Solicitando acesso ao microfone...";
+    if (recordStatus) {
+      recordStatus.textContent = "Solicitando acesso ao microfone...";
+    }
     mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     mediaRecorder = new MediaRecorder(mediaStream);
     chunks = [];
     elapsedSeconds = 0;
-    timerDisplay.textContent = "00:00";
+    if (timerDisplay) {
+      timerDisplay.textContent = "00:00";
+    }
 
     mediaRecorder.addEventListener("dataavailable", (event) => {
       if (event.data && event.data.size > 0) {
@@ -152,11 +210,15 @@ async function startRecording() {
       const blob = new Blob(chunks, { type: "audio/webm" });
       latestBlob = blob;
       updatePreview(blob);
-      timerDisplay.textContent = "00:00";
+      if (timerDisplay) {
+        timerDisplay.textContent = "00:00";
+      }
       setRecordButtonLabel("Iniciar gravação");
       recordBtn.disabled = false;
-      recordStatus.textContent =
-        "Pré-escute o áudio e clique em Enviar quando estiver tudo certo.";
+      if (recordStatus) {
+        recordStatus.textContent =
+          "Pré-escute o áudio e clique em Enviar quando estiver tudo certo.";
+      }
       if (sendBtn) {
         sendBtn.disabled = false;
         setSendButtonLabel("Enviar gravação");
@@ -167,11 +229,17 @@ async function startRecording() {
     mediaRecorder.start();
     timerInterval = window.setInterval(() => {
       elapsedSeconds += 1;
-      timerDisplay.textContent = formatTime(elapsedSeconds);
+      if (timerDisplay) {
+        timerDisplay.textContent = formatTime(elapsedSeconds);
+      }
     }, 1000);
 
-    recordStatus.textContent = "Gravando... Clique para finalizar e enviar.";
-    uploadStatus.textContent = "";
+    if (recordStatus) {
+      recordStatus.textContent = "Gravando... Clique para finalizar e enviar.";
+    }
+    if (uploadStatus) {
+      uploadStatus.textContent = "";
+    }
     setRecordButtonLabel("Parar e revisar");
     recordBtn.disabled = false;
     if (sendBtn) {
@@ -179,8 +247,10 @@ async function startRecording() {
     }
   } catch (error) {
     recordBtn.disabled = false;
-    recordStatus.textContent =
-      "Não foi possível acessar o microfone. Verifique as permissões.";
+    if (recordStatus) {
+      recordStatus.textContent =
+        "Não foi possível acessar o microfone. Verifique as permissões.";
+    }
   }
 }
 
@@ -203,13 +273,19 @@ async function uploadAudio(blob) {
     return;
   }
 
-  if (!activeEmail) {
-    showErrorToast("E-mail não validado. Por favor, valide seu e-mail primeiro.");
-    return;
+  if (!currentUser) {
+    showErrorToast("Sessão expirada. Por favor, faça login novamente.");
+    await checkAuthStatus();
+    if (!currentUser) {
+      showLoginPrompt();
+      return;
+    }
   }
 
-  uploadStatus.textContent = "Preparando upload...";
-  uploadStatus.className = "upload-status";
+  if (uploadStatus) {
+    uploadStatus.textContent = "Preparando upload...";
+    uploadStatus.className = "upload-status";
+  }
   if (sendBtn) {
     sendBtn.disabled = true;
     setSendButtonLabel("Enviando...");
@@ -218,10 +294,11 @@ async function uploadAudio(blob) {
   try {
     const urlResponse = await fetch("/api/get-upload-url", {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email: activeEmail }),
+      body: JSON.stringify({}),
     });
 
     const contentType = urlResponse.headers.get('content-type');
@@ -240,6 +317,12 @@ async function uploadAudio(blob) {
     }
 
     if (!urlResponse.ok) {
+      if (urlResponse.status === 401) {
+        // Session expired
+        currentUser = null;
+        showLoginPrompt();
+        throw new Error("Sessão expirada. Por favor, faça login novamente.");
+      }
       throw new Error(urlData?.error || `Falha ao obter URL de upload: ${urlResponse.status}`);
     }
 
@@ -247,7 +330,9 @@ async function uploadAudio(blob) {
       throw new Error('URL de upload não retornada pelo servidor');
     }
 
-    uploadStatus.textContent = "Enviando gravação para o bucket OCI...";
+    if (uploadStatus) {
+      uploadStatus.textContent = "Enviando gravação para o bucket OCI...";
+    }
     
     const uploadResponse = await fetch(urlData.uploadUrl, {
       method: "PUT",
@@ -263,10 +348,14 @@ async function uploadAudio(blob) {
       throw new Error(`Falha no upload para OCI: ${uploadResponse.status} - ${errorText}`);
     }
 
-    recordStatus.textContent =
-      "Áudio entregue. Você pode gravar novamente se desejar.";
-    uploadStatus.textContent = "";
-    uploadStatus.className = "upload-status";
+    if (recordStatus) {
+      recordStatus.textContent =
+        "Áudio entregue. Você pode gravar novamente se desejar.";
+    }
+    if (uploadStatus) {
+      uploadStatus.textContent = "";
+      uploadStatus.className = "upload-status";
+    }
     resetPreview();
     showSuccessToast("Gravação enviada com sucesso para o bucket OCI.");
     if (sendBtn) {
@@ -275,9 +364,13 @@ async function uploadAudio(blob) {
     }
   } catch (error) {
     const errorMessage = error.message || "Não foi possível enviar o áudio. Tente novamente.";
-    recordStatus.textContent = "Ocorreu um erro durante o upload.";
-    uploadStatus.textContent = "";
-    uploadStatus.className = "upload-status";
+    if (recordStatus) {
+      recordStatus.textContent = "Ocorreu um erro durante o upload.";
+    }
+    if (uploadStatus) {
+      uploadStatus.textContent = "";
+      uploadStatus.className = "upload-status";
+    }
     showErrorToast(errorMessage);
     if (sendBtn) {
       sendBtn.disabled = false;
@@ -332,7 +425,7 @@ window.addEventListener("beforeunload", resetPreview);
 function setRecordButtonLabel(label) {
   if (recordBtnLabel) {
     recordBtnLabel.textContent = label;
-  } else {
+  } else if (recordBtn) {
     recordBtn.textContent = label;
   }
 }
@@ -352,15 +445,21 @@ function revealRecorder() {
   if (emailSummary) {
     emailSummary.classList.remove("is-hidden");
   }
-  if (activeEmailLabel) {
-    activeEmailLabel.textContent = activeEmail;
+  if (activeEmailLabel && currentUser) {
+    activeEmailLabel.textContent = currentUser.email;
   }
 
-  recordBtn.disabled = false;
-  recorderSection.setAttribute("aria-disabled", "false");
-  recorderSection.classList.remove("is-hidden");
-  recordStatus.textContent =
-    "Microfone disponível. Quando estiver pronto, inicie a gravação.";
+  if (recordBtn) {
+    recordBtn.disabled = false;
+  }
+  if (recorderSection) {
+    recorderSection.setAttribute("aria-disabled", "false");
+    recorderSection.classList.remove("is-hidden");
+  }
+  if (recordStatus) {
+    recordStatus.textContent =
+      "Microfone disponível. Quando estiver pronto, inicie a gravação.";
+  }
   setRecordButtonLabel("Iniciar gravação");
   if (sendBtn) {
     sendBtn.disabled = true;
@@ -375,13 +474,16 @@ function showEmailForm() {
   if (emailSummary) {
     emailSummary.classList.add("is-hidden");
   }
-  recorderSection.setAttribute("aria-disabled", "true");
-  recorderSection.classList.add("is-hidden");
-  emailInput.value = "";
-  feedback.textContent = "";
-  activeEmail = "";
-  recordStatus.textContent = "Aguardando validação do e-mail.";
-  uploadStatus.textContent = "";
+  if (recorderSection) {
+    recorderSection.setAttribute("aria-disabled", "true");
+    recorderSection.classList.add("is-hidden");
+  }
+  if (recordStatus) {
+    recordStatus.textContent = "Aguardando autenticação SSO.";
+  }
+  if (uploadStatus) {
+    uploadStatus.textContent = "";
+  }
   setRecordButtonLabel("Iniciar gravação");
   if (sendBtn) {
     sendBtn.disabled = true;
@@ -447,4 +549,19 @@ function showErrorToast(message) {
       toast.style.display = "none";
     }, 300);
   }, 5000);
+}
+
+// Logout button handler
+document.addEventListener('DOMContentLoaded', () => {
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', handleLogout);
+  }
+});
+
+// Initialize app when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
 }
