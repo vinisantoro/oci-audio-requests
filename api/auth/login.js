@@ -8,17 +8,29 @@ const crypto = require('crypto');
 
 module.exports = async (req, res) => {
   // Handle POST requests that might come from OCI Domain redirects
-  // If this is a POST with OAuth parameters, redirect to callback
-  if (req.method === 'POST' && (req.body?.code || req.query?.code)) {
-    // OCI Domain redirected here with auth code, redirect to callback
+  // OCI Domain may redirect here after authentication, redirect to callback
+  if (req.method === 'POST') {
     const callbackUrl = process.env.CALLBACK_URL || 'https://notes.dailybits.tech/api/auth/callback';
-    const params = new URLSearchParams(req.query);
-    if (req.body?.code) params.set('code', req.body.code);
-    if (req.body?.state) params.set('state', req.body.state);
-    if (req.body?.error) params.set('error', req.body.error);
+    const params = new URLSearchParams();
+    
+    // Collect parameters from query string or body
+    if (req.query?.code) params.set('code', req.query.code);
+    if (req.query?.state) params.set('state', req.query.state);
+    if (req.query?.error) params.set('error', req.query.error);
+    
+    if (req.body) {
+      if (req.body.code) params.set('code', req.body.code);
+      if (req.body.state) params.set('state', req.body.state);
+      if (req.body.error) params.set('error', req.body.error);
+    }
+    
+    // Redirect to callback with any parameters found
+    const redirectUrl = params.toString() 
+      ? `${callbackUrl}?${params.toString()}`
+      : callbackUrl;
     
     res.writeHead(302, {
-      'Location': `${callbackUrl}?${params.toString()}`
+      'Location': redirectUrl
     });
     res.end();
     return;
