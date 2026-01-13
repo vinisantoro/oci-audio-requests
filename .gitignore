@@ -4,3 +4,5 @@ config.js
 .env.local
 ALLOWED_EMAILS.env
 node_modules
+.DS_Store
+certs/
