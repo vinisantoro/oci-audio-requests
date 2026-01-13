@@ -263,6 +263,74 @@ To change the app name, edit `manifest.json`:
    - Upload bypasses the server, avoiding timeout for large files
    - Success/error toast appears based on result
 
+## 📋 Política de Uso
+
+### 1. Uso Autorizado
+
+Esta ferramenta é destinada exclusivamente para uso corporativo autorizado. Apenas colaboradores com endereço de e-mail corporativo validado podem utilizar o serviço.
+
+### 2. Responsabilidades do Usuário
+
+O usuário é responsável por:
+
+- Garantir que o conteúdo do áudio enviado esteja em conformidade com as políticas corporativas
+- Manter a confidencialidade de suas credenciais de acesso
+- Não utilizar a ferramenta para fins não autorizados
+- Respeitar direitos de propriedade intelectual e privacidade
+
+### 3. Limitações
+
+- Os arquivos de áudio são armazenados temporariamente e podem ser removidos conforme políticas de retenção
+- A ferramenta não garante backup automático dos arquivos enviados
+- O uso indevido pode resultar em suspensão do acesso
+
+### 4. Privacidade e Segurança
+
+Todos os dados são tratados de acordo com as políticas de segurança e privacidade corporativas. Os arquivos são transmitidos e armazenados de forma segura no Oracle Cloud Infrastructure.
+
+## 📖 Como Usar
+
+### Exemplo de conteúdo esperado:
+
+> Hoje, na reunião sobre o projeto de Automação de Atendimento, participaram João Silva, Gerente de TI, e Maria Santos, Arquiteta de Soluções. O objetivo da reunião foi alinhar os requisitos técnicos e funcionais para a implementação do novo sistema de integração, bem como discutir prazos, responsabilidades e riscos associados ao projeto. Os principais pontos discutidos incluíram a visão geral da arquitetura proposta para a solução e as limitações técnicas identificadas no ambiente atual. As decisões tomadas foram a aprovação da arquitetura de referência apresentada e a definição do uso de serviços cloud gerenciados, com o objetivo de reduzir o esforço operacional. Como próximos passos, ficou definido elaborar o desenho detalhado da arquitetura até a próxima semana e agendar a prova de conceito com a equipa técnica.
+
+### Passo 1: Valide seu e-mail
+
+Digite seu endereço de e-mail corporativo no campo indicado e clique em "Validar". O sistema verificará se você tem permissão para usar a ferramenta.
+
+### Passo 2: Inicie a gravação
+
+Após a validação, clique no botão "Iniciar gravação". O sistema solicitará permissão para acessar o microfone do seu dispositivo. Permita o acesso quando solicitado.
+
+### Passo 3: Grave seu áudio
+
+Fale claramente no microfone. Você verá um cronômetro indicando a duração da gravação. Quando terminar, clique novamente no botão (que agora mostrará "Parar gravação").
+
+### Passo 4: Pré-visualize
+
+Antes de enviar, você pode ouvir o áudio gravado usando o player de áudio que aparecerá na tela. Certifique-se de que o conteúdo está correto.
+
+### Passo 5: Envie
+
+Clique no botão "Enviar gravação". O arquivo será enviado diretamente para o Oracle Cloud Infrastructure. Aguarde a confirmação de sucesso antes de fechar a página.
+
+### Dicas
+
+- Use um ambiente silencioso para melhor qualidade de áudio
+- Mantenha o dispositivo próximo durante a gravação
+- Verifique sua conexão com a internet antes de enviar
+- Em dispositivos móveis, você pode instalar o app na tela inicial para acesso rápido
+
+## 🎙️ Melhorando seu áudio
+
+Este aplicativo destina-se ao registo e à organização automática de informações de reuniões a partir de áudios fornecidos pelos utilizadores. O áudio submetido **não pode ultrapassar 5 (cinco) minutos**, sendo este limite essencial para garantir o correto processamento e a qualidade do conteúdo gerado.
+
+### Exemplo de conteúdo esperado:
+
+> Hoje, na reunião sobre o projeto de Automação de Atendimento, participaram João Silva, Gerente de TI, e Maria Santos, Arquiteta de Soluções. O objetivo da reunião foi alinhar os requisitos técnicos e funcionais para a implementação do novo sistema de integração, bem como discutir prazos, responsabilidades e riscos associados ao projeto. Os principais pontos discutidos incluíram a visão geral da arquitetura proposta para a solução e as limitações técnicas identificadas no ambiente atual. As decisões tomadas foram a aprovação da arquitetura de referência apresentada e a definição do uso de serviços cloud gerenciados, com o objetivo de reduzir o esforço operacional. Como próximos passos, ficou definido elaborar o desenho detalhado da arquitetura até a próxima semana e agendar a prova de conceito com a equipa técnica.
+
+**Importante:** O conteúdo gerado pelo aplicativo constitui apenas um resumo estruturado com base no áudio fornecido e não substitui atas oficiais, documentos formais ou decisões com valor jurídico. A validação final das informações é de responsabilidade dos participantes da reunião.
+
 ## 🐛 Troubleshooting
 
 ### Error: "Email not authorized"

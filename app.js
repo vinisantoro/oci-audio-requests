@@ -551,12 +551,29 @@ function showErrorToast(message) {
   }, 5000);
 }
 
+/**
+ * Initialize info section toggles (Política de Uso and Como Usar)
+ */
+function initInfoSections() {
+  const toggles = document.querySelectorAll('.info-section-toggle');
+  
+  toggles.forEach(toggle => {
+    toggle.addEventListener('click', () => {
+      const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', !isExpanded);
+    });
+  });
+}
+
 // Logout button handler
 document.addEventListener('DOMContentLoaded', () => {
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', handleLogout);
   }
+  
+  // Initialize info sections
+  initInfoSections();
 });
 
 // Initialize app when DOM is ready
