@@ -1,7 +1,22 @@
 /**
  * Authentication Status Endpoint
- * Returns current user session information
+ * Returns current user session information (OIDC)
  */
+
+/**
+ * Parse cookies from request
+ */
+function parseCookies(cookieHeader) {
+  const cookies = {};
+  if (!cookieHeader) return cookies;
+  
+  cookieHeader.split(';').forEach(cookie => {
+    const [name, ...rest] = cookie.trim().split('=');
+    cookies[name] = rest.join('=');
+  });
+  
+  return cookies;
+}
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') {
@@ -19,8 +34,8 @@ module.exports = async (req, res) => {
 
   try {
     // Extract session from cookie
-    const cookies = req.headers.cookie || '';
-    const sessionCookie = cookies.split(';').find(c => c.trim().startsWith('saml_session='));
+    const cookies = parseCookies(req.headers.cookie);
+    const sessionCookie = cookies.oidc_session;
     
     if (!sessionCookie) {
       return res.status(200).json({
@@ -29,13 +44,11 @@ module.exports = async (req, res) => {
       });
     }
 
-    const sessionToken = sessionCookie.split('=')[1];
-    
     try {
-      const sessionData = JSON.parse(Buffer.from(sessionToken, 'base64').toString());
+      const sessionData = JSON.parse(Buffer.from(sessionCookie, 'base64').toString());
       
       // Check if session expired
-      if (sessionData.expires && Date.now() > sessionData.expires) {
+      if (sessionData.expiresAt && Date.now() > sessionData.expiresAt) {
         return res.status(200).json({
           authenticated: false,
           user: null,
@@ -47,7 +60,8 @@ module.exports = async (req, res) => {
         authenticated: true,
         user: {
           email: sessionData.email,
-          name: sessionData.name
+          name: sessionData.name,
+          sub: sessionData.sub
         }
       });
     } catch (parseError) {

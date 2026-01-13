@@ -65,18 +65,18 @@ async function checkAuthStatus() {
 }
 
 /**
- * Initiate SSO login
+ * Initiate SSO login (OIDC)
  */
 function initiateSSOLogin() {
-  window.location.href = "/api/saml/login";
+  window.location.href = "/api/auth/login";
 }
 
 /**
- * Handle logout
+ * Handle logout (OIDC)
  */
 async function handleLogout() {
   try {
-    await fetch("/api/saml/logout", {
+    await fetch("/api/auth/logout", {
       method: "GET",
       credentials: "include",
     });
@@ -104,17 +104,24 @@ async function init() {
       activeEmailLabel.textContent = currentUser.email;
     }
   } else {
-    // Check if we're coming back from SAML callback (URL might have params)
+    // Check if we're coming back from OIDC callback (URL might have params)
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has("saml") || window.location.pathname.includes("callback")) {
+    if (urlParams.has("code") || urlParams.has("error") || window.location.pathname.includes("callback")) {
       // Wait a bit for cookie to be set, then check again
       setTimeout(async () => {
         const authenticated = await checkAuthStatus();
         if (authenticated) {
           revealRecorder();
-          // Clean URL
-          window.history.replaceState({}, document.title, window.location.pathname);
+          // Clean URL (remove OAuth params)
+          window.history.replaceState({}, document.title, '/');
         } else {
+          // Check for error in URL
+          if (urlParams.has("error")) {
+            const error = urlParams.get("error");
+            showErrorToast(`Erro na autenticação: ${decodeURIComponent(error)}`);
+            // Clean URL after showing error
+            window.history.replaceState({}, document.title, '/');
+          }
           showLoginPrompt();
         }
       }, 500);

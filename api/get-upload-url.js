@@ -14,22 +14,36 @@ const allowedEmailSet = new Set(
 );
 
 /**
- * Extract user session from cookie
+ * Parse cookies from request
+ */
+function parseCookies(cookieHeader) {
+  const cookies = {};
+  if (!cookieHeader) return cookies;
+  
+  cookieHeader.split(';').forEach(cookie => {
+    const [name, ...rest] = cookie.trim().split('=');
+    cookies[name] = rest.join('=');
+  });
+  
+  return cookies;
+}
+
+/**
+ * Extract user session from cookie (OIDC)
  */
 function getSessionFromCookie(req) {
-  const cookies = req.headers.cookie || '';
-  const sessionCookie = cookies.split(';').find(c => c.trim().startsWith('saml_session='));
+  const cookies = parseCookies(req.headers.cookie);
+  const sessionCookie = cookies.oidc_session;
   
   if (!sessionCookie) {
     return null;
   }
 
   try {
-    const sessionToken = sessionCookie.split('=')[1];
-    const sessionData = JSON.parse(Buffer.from(sessionToken, 'base64').toString());
+    const sessionData = JSON.parse(Buffer.from(sessionCookie, 'base64').toString());
     
     // Check if session expired
-    if (sessionData.expires && Date.now() > sessionData.expires) {
+    if (sessionData.expiresAt && Date.now() > sessionData.expiresAt) {
       return null;
     }
 
@@ -55,7 +69,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // Get user from SAML session
+    // Get user from OIDC session
     const session = getSessionFromCookie(req);
     
     if (!session || !session.email) {
@@ -69,7 +83,7 @@ module.exports = async (req, res) => {
 
     // Optional: Validate against allowed emails list if configured
     // This provides an extra layer of security if you want to restrict
-    // access even for authenticated SAML users
+    // access even for authenticated OIDC users
     if (allowedEmailSet.size > 0 && !allowedEmailSet.has(normalizedEmail)) {
       return res.status(403).json({ 
         error: 'Your account is not authorized for uploads' 

@@ -1,36 +1,60 @@
 # Audio Upload Application
 
-Web application for validating authorized users and uploading audio files to Oracle Cloud Infrastructure (OCI) Object Storage.
+Web application for uploading audio files to Oracle Cloud Infrastructure (OCI) Object Storage with OIDC SSO authentication via OCI Identity Domains.
 
-**🔒 Security:** The allowed email list and OCI bucket URL are protected in the backend (Serverless Functions), not exposed in the frontend code.
+**🔒 Security:** Authentication is handled via OCI Identity Domains using OIDC (OpenID Connect). The OCI bucket URL is protected in the backend (Serverless Functions), not exposed in the frontend code.
 
 **📱 PWA:** The application can be installed on the home screen of mobile devices, functioning as a native app (Android and iOS).
+
+**🔐 Authentication:** Uses OIDC SSO with OCI Identity Domains. Users authenticate via corporate SSO before accessing the application.
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
 - A hosting platform that supports Serverless Functions (e.g., Vercel, Netlify, AWS Lambda, etc.)
-- An Oracle Cloud Infrastructure account with Object Storage configured
-- A Pre-Authenticated Request (PAR) URL for direct uploads to OCI
+- An Oracle Cloud Infrastructure account with:
+  - OCI Identity Domain configured
+  - OIDC application registered in the Domain
+  - Object Storage configured
+  - A Pre-Authenticated Request (PAR) URL for direct uploads to OCI
 
 ### Configuration
 
-Before deploying, you need to configure two environment variables:
+Before deploying, you need to configure the following environment variables:
 
-1. **Environment Variable: `OCI_UPLOAD_URL`**
+#### OIDC Authentication (Required)
 
-   - **Value:** Your complete Pre-Authenticated Request (PAR) endpoint URL
-     - Example: `https://objectstorage.sa-saopaulo-1.oraclecloud.com/p/<par-id>/n/<namespace>/b/<bucket>/o/`
+1. **`OCI_DOMAIN_URL`** - URL base do OCI Identity Domain
+   - Example: `https://<domain-id>.identity.oraclecloud.com`
+   - Get this from: OCI Console > Identity & Security > Domains > [Your Domain] > Details
+
+2. **`CLIENT_ID`** - Client ID da aplicação OIDC
+   - Get this from: OCI Console > Identity & Security > Domains > [Your Domain] > Applications > [Your App] > Configuration
+
+3. **`CLIENT_SECRET`** - Client Secret da aplicação OIDC
+   - Get this from: OCI Console > Identity & Security > Domains > [Your Domain] > Applications > [Your App] > Configuration
+   - **IMPORTANT:** Keep this secret secure and never commit it to version control
+
+4. **`CALLBACK_URL`** - URL de callback OIDC
+   - Example: `https://notes.dailybits.tech/callback`
+   - Must match the "Custom Social Linking Callback URL" configured in OCI Domain
+
+5. **`SESSION_SECRET`** - Secret para assinar cookies de sessão
+   - Generate a random secure value (e.g., `openssl rand -base64 32`)
+
+#### OCI Object Storage (Required)
+
+6. **`OCI_UPLOAD_URL`** - Pre-Authenticated Request (PAR) endpoint URL
+   - Example: `https://objectstorage.sa-saopaulo-1.oraclecloud.com/p/<par-id>/n/<namespace>/b/<bucket>/o/`
    - Make sure this variable is available in all environments (Production, Preview, Development)
 
-2. **Environment Variable: `ALLOWED_EMAILS`**
-   - **Value:** A JSON array string containing all authorized email addresses
-     - Example: `["user1@example.com","user2@example.com","user3@example.com"]`
-   - **IMPORTANT:** 
-     - Do NOT commit the email list to version control
-     - The interface gráfica da Vercel has character limits. For large email lists, use **Vercel CLI** (see instructions below)
-     - Copy `ALLOWED_EMAILS.env.example` to `ALLOWED_EMAILS.env` and add your real emails there (this file is in `.gitignore`)
+#### Optional Security Layer
+
+7. **`ALLOWED_EMAILS`** - (Optional) JSON array of authorized email addresses
+   - Example: `["user1@example.com","user2@example.com"]`
+   - Provides an extra security layer even after OIDC authentication
+   - **IMPORTANT:** Do NOT commit the email list to version control
 
 ### Deployment
 
@@ -72,8 +96,14 @@ After deployment, test the application by:
 ```
 /
 ├── api/                          # Serverless Functions (Backend)
-│   ├── validate-email.js        # Email validation API
-│   └── get-upload-url.js        # API that returns PAR upload URL
+│   └── auth/                     # OIDC Authentication APIs
+│       ├── login.js              # Initiates OIDC flow
+│       ├── callback.js           # Processes OIDC callback
+│       ├── logout.js             # Ends user session
+│       └── status.js             # Checks authentication status
+│   └── get-upload-url.js         # API that returns PAR upload URL
+├── lib/                          # Shared libraries
+│   └── oidc-config.js           # OIDC configuration and utilities
 ├── app.js                        # Frontend (no sensitive data)
 ├── pwa.js                        # PWA code (installation and service worker)
 ├── sw.js                         # Service Worker (caching and offline support)
@@ -83,21 +113,23 @@ After deployment, test the application by:
 ├── icon-oracle.svg               # SVG source for icons
 ├── index.html                    # HTML interface
 ├── styles.css                    # Styles
+├── OIDC_CONFIG.env.example       # Example OIDC configuration
 └── vercel.json                   # Platform-specific configuration (if applicable)
 ```
 
 **Notes:**
 
-- The email list is configured via the `ALLOWED_EMAILS` environment variable (not in code files)
-- No `config.js` file is needed - all configuration is done via environment variables
+- OIDC authentication is handled via OCI Identity Domains
+- All configuration is done via environment variables (see Configuration section)
 - **PWA:** Icons are included in the project. The application can be installed on the home screen.
 
 ## 🔐 Security Implementation
 
 ### Architecture
 
-- ✅ Email list protected in `ALLOWED_EMAILS` environment variable (not exposed in code)
+- ✅ OIDC authentication via OCI Identity Domains (secure SSO)
 - ✅ OCI bucket URL protected in `OCI_UPLOAD_URL` environment variable (not exposed)
+- ✅ Optional email allowlist via `ALLOWED_EMAILS` environment variable (extra security layer)
 - ✅ Email validation performed on the backend
 - ✅ Direct upload to OCI using Pre-Authenticated Request (PAR) URLs
 - ✅ No sensitive data in frontend code or version control
@@ -243,13 +275,18 @@ To change the app name, edit `manifest.json`:
 
 ## 🔄 Application Flow
 
-1. **Email Validation:**
+1. **OIDC Authentication:**
 
-   - User enters email in frontend
-   - Frontend calls `/api/validate-email` (POST)
-   - Backend verifies against protected list
-   - Returns `valid: true/false` without exposing the list
-   - Error toast appears if email is invalid
+   - User accesses application
+   - Frontend checks authentication status via `/api/auth/status`
+   - If not authenticated, user is prompted to login
+   - User clicks "Entrar com SSO Corporativo"
+   - Frontend redirects to `/api/auth/login`
+   - Backend redirects to OCI Identity Domain OAuth2 endpoint
+   - User authenticates with corporate credentials
+   - OCI Domain redirects back to `/api/auth/callback` with authorization code
+   - Backend exchanges code for tokens and creates session
+   - User is redirected to application authenticated
 
 2. **Audio Recording:**
 
@@ -257,8 +294,8 @@ To change the app name, edit `manifest.json`:
    - Audio is available for preview
 
 3. **Upload:**
-   - Frontend calls `/api/get-upload-url` (POST) with email
-   - Backend validates email and returns PAR URL for upload
+   - Frontend calls `/api/get-upload-url` (POST)
+   - Backend validates OIDC session and returns PAR URL for upload
    - Frontend uploads **directly** to OCI using PAR URL (PUT)
    - Upload bypasses the server, avoiding timeout for large files
    - Success/error toast appears based on result
@@ -333,18 +370,22 @@ Este aplicativo destina-se ao registo e à organização automática de informa�
 
 ## 🐛 Troubleshooting
 
-### Error: "Email not authorized"
+### Error: "OIDC configuration error"
 
-- Verify the email is in the `ALLOWED_EMAILS` environment variable
-- Ensure the email is in the JSON array format: `["email1@example.com","email2@example.com"]`
-- Check that the environment variable is properly configured in your hosting platform
-- Ensure the variable is available in the correct environment (Production, Preview, Development)
+- Verify that `OCI_DOMAIN_URL`, `CLIENT_ID`, `CLIENT_SECRET`, and `CALLBACK_URL` are configured
+- Check that `CALLBACK_URL` matches exactly what's configured in OCI Domain
+- See [README_OIDC.md](README_OIDC.md) for detailed OIDC troubleshooting
+
+### Error: "Authentication required"
+
+- User session may have expired (sessions expire after 8 hours)
+- User needs to login again via SSO
+- Check that cookies are enabled in the browser
 
 ### Error: "Server configuration incomplete"
 
-- Verify both `OCI_UPLOAD_URL` and `ALLOWED_EMAILS` environment variables are configured
-- Ensure both variables are available in all environments (Production, Preview, Development)
-- Check that `ALLOWED_EMAILS` is a valid JSON array string
+- Verify `OCI_UPLOAD_URL` environment variable is configured
+- Ensure the variable is available in all environments (Production, Preview, Development)
 
 ### Error: "Upload failed"
 
@@ -378,10 +419,14 @@ Este aplicativo destina-se ao registo e à organização automática de informa�
 
 ## 📚 Resources
 
+- [README_OIDC.md](README_OIDC.md) - Complete OIDC SSO configuration guide
+- [OCI_DOMAINS_REQUISITOS.md](OCI_DOMAINS_REQUISITOS.md) - OCI Domains requirements checklist
 - [Oracle Cloud Infrastructure - Object Storage](https://docs.oracle.com/en-us/iaas/Content/Object/Concepts/objectstorageoverview.htm)
+- [OCI Identity Domains Documentation](https://docs.oracle.com/en-us/iaas/Content/Identity/domains/overview.htm)
 - [Progressive Web Apps - MDN](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
 - [PWA Builder](https://www.pwabuilder.com/)
 - [MediaRecorder API - MDN](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder)
+- [OAuth 2.0 / OIDC Specification](https://openid.net/specs/openid-connect-core-1_0.html)
 
 ## 📄 License
 
