@@ -126,12 +126,21 @@ async function init() {
               
               // Check if we have state but no code (common issue)
               if (detailsDecoded.includes('state=true') && detailsDecoded.includes('code=false')) {
-                errorMessage = 'Autenticação não completada. O OCI Domain retornou sem o código de autorização. ';
-                errorMessage += 'Possíveis causas:\n';
-                errorMessage += '1. Login não foi completado completamente\n';
-                errorMessage += '2. Usuário não tem permissão para acessar a aplicação\n';
-                errorMessage += '3. Configuração incorreta no OCI Domain\n\n';
-                errorMessage += 'Tente fazer login novamente e complete todo o processo.';
+                errorMessage = 'Autenticação não completada. O OCI Domain retornou state mas não retornou code.\n\n';
+                errorMessage += '🔍 O que verificar:\n\n';
+                errorMessage += '1. ✅ Você completou TODO o processo de login?\n';
+                errorMessage += '   - Você foi redirecionado para o IdP corporativo (CORP-IDCS)?\n';
+                errorMessage += '   - Você inseriu email e senha?\n';
+                errorMessage += '   - Você foi redirecionado de volta?\n\n';
+                errorMessage += '2. ✅ A aplicação está na Sign-On Policy?\n';
+                errorMessage += '   - OCI Console > Security > Sign-On Policies > Default Sign-On Policy\n';
+                errorMessage += '   - Verifique se sua aplicação está listada\n\n';
+                errorMessage += '3. ✅ A Authentication Rule usa Identity Provider SAML?\n';
+                errorMessage += '   - Na Sign-On Policy, verifique se há uma regra usando CORP-IDCS\n\n';
+                errorMessage += '4. ✅ Verifique os logs no OCI Console:\n';
+                errorMessage += '   - Audit > Sign-On Events\n';
+                errorMessage += '   - Veja se há erros durante o login\n\n';
+                errorMessage += '💡 Dica: Limpe os cookies e tente novamente em modo anônimo.';
               } else {
                 errorMessage += '. O OCI Domain não está enviando os parâmetros necessários (code, state). Verifique a configuração do Redirect URI na aplicação OCI Domain.';
                 if (details) {
