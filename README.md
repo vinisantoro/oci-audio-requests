@@ -288,9 +288,11 @@ O usuário é responsável por:
 
 Todos os dados são tratados de acordo com as políticas de segurança e privacidade corporativas. Os arquivos são transmitidos e armazenados de forma segura no Oracle Cloud Infrastructure.
 
-## 📖 Exemplo de Uso
+## 📖 Como Usar
 
-Siga estes passos para enviar uma solicitação de áudio:
+### Exemplo de conteúdo esperado:
+
+> Hoje, na reunião sobre o projeto de Automação de Atendimento, participaram João Silva, Gerente de TI, e Maria Santos, Arquiteta de Soluções. O objetivo da reunião foi alinhar os requisitos técnicos e funcionais para a implementação do novo sistema de integração, bem como discutir prazos, responsabilidades e riscos associados ao projeto. Os principais pontos discutidos incluíram a visão geral da arquitetura proposta para a solução e as limitações técnicas identificadas no ambiente atual. As decisões tomadas foram a aprovação da arquitetura de referência apresentada e a definição do uso de serviços cloud gerenciados, com o objetivo de reduzir o esforço operacional. Como próximos passos, ficou definido elaborar o desenho detalhado da arquitetura até a próxima semana e agendar a prova de conceito com a equipa técnica.
 
 ### Passo 1: Valide seu e-mail
 
@@ -318,6 +320,16 @@ Clique no botão "Enviar gravação". O arquivo será enviado diretamente para o
 - Mantenha o dispositivo próximo durante a gravação
 - Verifique sua conexão com a internet antes de enviar
 - Em dispositivos móveis, você pode instalar o app na tela inicial para acesso rápido
+
+## 🎙️ Melhorando seu áudio
+
+Este aplicativo destina-se ao registo e à organização automática de informações de reuniões a partir de áudios fornecidos pelos utilizadores. O áudio submetido **não pode ultrapassar 5 (cinco) minutos**, sendo este limite essencial para garantir o correto processamento e a qualidade do conteúdo gerado.
+
+### Exemplo de conteúdo esperado:
+
+> Hoje, na reunião sobre o projeto de Automação de Atendimento, participaram João Silva, Gerente de TI, e Maria Santos, Arquiteta de Soluções. O objetivo da reunião foi alinhar os requisitos técnicos e funcionais para a implementação do novo sistema de integração, bem como discutir prazos, responsabilidades e riscos associados ao projeto. Os principais pontos discutidos incluíram a visão geral da arquitetura proposta para a solução e as limitações técnicas identificadas no ambiente atual. As decisões tomadas foram a aprovação da arquitetura de referência apresentada e a definição do uso de serviços cloud gerenciados, com o objetivo de reduzir o esforço operacional. Como próximos passos, ficou definido elaborar o desenho detalhado da arquitetura até a próxima semana e agendar a prova de conceito com a equipa técnica.
+
+**Importante:** O conteúdo gerado pelo aplicativo constitui apenas um resumo estruturado com base no áudio fornecido e não substitui atas oficiais, documentos formais ou decisões com valor jurídico. A validação final das informações é de responsabilidade dos participantes da reunião.
 
 ## 🐛 Troubleshooting
 

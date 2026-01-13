@@ -423,6 +423,66 @@ button.primary:not(:disabled):hover {
   margin-bottom: 0;
 }
 
+/* Example Highlight Box */
+.example-highlight {
+  margin: 20px 0;
+  padding: 0;
+}
+
+.example-highlight h4 {
+  margin: 0 0 12px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--oracle-charcoal);
+}
+
+.example-content-box {
+  background: linear-gradient(135deg, rgba(199, 70, 52, 0.08) 0%, rgba(199, 70, 52, 0.04) 100%);
+  border: 2px solid rgba(199, 70, 52, 0.2);
+  border-left: 4px solid var(--oracle-red);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 0;
+  box-shadow: 0 2px 8px rgba(199, 70, 52, 0.1);
+}
+
+.example-content-box p {
+  margin: 0;
+  color: var(--oracle-charcoal);
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+/* Audio Improvement Text */
+.audio-improvement-text {
+  color: var(--oracle-charcoal);
+  line-height: 1.6;
+}
+
+.audio-improvement-text p {
+  margin: 0 0 16px 0;
+}
+
+.audio-improvement-text p:last-child {
+  margin-bottom: 0;
+}
+
+.audio-improvement-text strong {
+  color: var(--oracle-red);
+  font-weight: 600;
+}
+
+.disclaimer {
+  margin-top: 20px !important;
+  padding: 16px;
+  background: rgba(111, 102, 95, 0.08);
+  border-left: 4px solid var(--oracle-muted);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  color: var(--oracle-muted);
+  font-style: italic;
+}
+
 /* Toast notifications */
 .toast {
   position: fixed;
