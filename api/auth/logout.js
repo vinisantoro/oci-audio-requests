@@ -27,7 +27,9 @@ module.exports = async (req, res) => {
 
   try {
     // Clear session cookie
-    const isProduction = process.env.VERCEL_URL && process.env.VERCEL_URL.startsWith('https://');
+    // Detect production environment more reliably
+    const isProduction = process.env.VERCEL_ENV === 'production' || 
+                        (process.env.VERCEL_URL && process.env.VERCEL_URL.startsWith('https://'));
     const secureFlag = isProduction ? 'Secure; ' : '';
     const sameSiteFlag = isProduction ? 'SameSite=None' : 'SameSite=Lax';
     

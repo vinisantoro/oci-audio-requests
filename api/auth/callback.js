@@ -21,52 +21,84 @@ function parseCookies(cookieHeader) {
   return cookies;
 }
 
-module.exports = async (req, res) => {
-  // Log request details for debugging
-  console.log('Callback received:', {
-    method: req.method,
-    url: req.url,
-    query: req.query,
-    headers: {
-      cookie: req.headers.cookie ? 'present' : 'missing',
-      referer: req.headers.referer
+/**
+ * Parse request body for POST requests
+ * Vercel automatically parses JSON and form-urlencoded, but we need to handle edge cases
+ */
+async function parseRequestBody(req) {
+  if (req.method !== 'POST') {
+    return {};
+  }
+
+  // Vercel already parses the body, but handle cases where it might not be available
+  if (req.body) {
+    return req.body;
+  }
+
+  // If body is a string (form-urlencoded), parse it
+  if (typeof req.body === 'string') {
+    const params = new URLSearchParams(req.body);
+    const parsed = {};
+    for (const [key, value] of params.entries()) {
+      parsed[key] = value;
     }
-  });
-
-  // Handle both GET and POST (OCI Domain might use POST)
-  let code, state, error, error_description;
-  
-  if (req.method === 'GET') {
-    code = req.query?.code;
-    state = req.query?.state;
-    error = req.query?.error;
-    error_description = req.query?.error_description;
-  } else if (req.method === 'POST') {
-    // Try to get from query string first (some OCI configurations send POST with query params)
-    code = req.query?.code || req.body?.code;
-    state = req.query?.state || req.body?.state;
-    error = req.query?.error || req.body?.error;
-    error_description = req.query?.error_description || req.body?.error_description;
-  } else {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return parsed;
   }
 
-  // Handle OAuth errors
-  if (error) {
-    console.error('OAuth error:', error, error_description);
-    return res.redirect(`/?error=${encodeURIComponent(error_description || error)}`);
-  }
+  return {};
+}
 
-  if (!code || !state) {
-    console.error('Missing parameters:', { 
-      hasCode: !!code, 
-      hasState: !!state,
+module.exports = async (req, res) => {
+  try {
+    // Log request details for debugging (but limit sensitive data)
+    console.log('Callback received:', {
       method: req.method,
-      queryKeys: Object.keys(req.query || {}),
-      bodyKeys: Object.keys(req.body || {})
+      url: req.url,
+      hasQuery: !!req.query,
+      hasBody: !!req.body,
+      headers: {
+        cookie: req.headers.cookie ? 'present' : 'missing',
+        'content-type': req.headers['content-type']
+      }
     });
-    return res.redirect('/?error=missing_parameters&details=' + encodeURIComponent(`code=${!!code},state=${!!state},method=${req.method}`));
-  }
+
+    // Handle both GET and POST (OCI Domain might use POST)
+    let code, state, error, error_description;
+    
+    if (req.method === 'GET') {
+      code = req.query?.code;
+      state = req.query?.state;
+      error = req.query?.error;
+      error_description = req.query?.error_description;
+    } else if (req.method === 'POST') {
+      // Parse body if needed
+      const body = await parseRequestBody(req);
+      
+      // Try to get from query string first (some OCI configurations send POST with query params)
+      code = req.query?.code || body?.code;
+      state = req.query?.state || body?.state;
+      error = req.query?.error || body?.error;
+      error_description = req.query?.error_description || body?.error_description;
+    } else {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    // Handle OAuth errors
+    if (error) {
+      console.error('OAuth error:', error, error_description);
+      return res.redirect(`/?error=${encodeURIComponent(error_description || error)}`);
+    }
+
+    if (!code || !state) {
+      console.error('Missing parameters:', { 
+        hasCode: !!code, 
+        hasState: !!state,
+        method: req.method,
+        queryKeys: Object.keys(req.query || {}),
+        bodyKeys: Object.keys(await parseRequestBody(req))
+      });
+      return res.redirect('/?error=missing_parameters&details=' + encodeURIComponent(`code=${!!code},state=${!!state},method=${req.method}`));
+    }
 
     // Validate state from cookie
     const cookies = parseCookies(req.headers.cookie);
@@ -94,7 +126,9 @@ module.exports = async (req, res) => {
     const sessionToken = Buffer.from(JSON.stringify(sessionData)).toString('base64');
 
     // Set session cookie
-    const isProduction = process.env.VERCEL_URL && process.env.VERCEL_URL.startsWith('https://');
+    // Detect production environment more reliably
+    const isProduction = process.env.VERCEL_ENV === 'production' || 
+                        (process.env.VERCEL_URL && process.env.VERCEL_URL.startsWith('https://'));
     const secureFlag = isProduction ? 'Secure; ' : '';
     const sameSiteFlag = isProduction ? 'SameSite=None' : 'SameSite=Lax';
     
@@ -138,6 +172,7 @@ module.exports = async (req, res) => {
     res.end();
   } catch (error) {
     console.error('OIDC callback error:', error);
+    console.error('Error stack:', error.stack);
     return res.redirect(`/?error=${encodeURIComponent(error.message || 'authentication_failed')}`);
   }
 };
