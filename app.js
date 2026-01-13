@@ -448,3 +448,24 @@ function showErrorToast(message) {
     }, 300);
   }, 5000);
 }
+
+/**
+ * Initialize info section toggles (Política de Uso and Como Usar)
+ */
+function initInfoSections() {
+  const toggles = document.querySelectorAll('.info-section-toggle');
+  
+  toggles.forEach(toggle => {
+    toggle.addEventListener('click', () => {
+      const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', !isExpanded);
+    });
+  });
+}
+
+// Initialize info sections when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initInfoSections);
+} else {
+  initInfoSections();
+}

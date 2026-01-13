@@ -263,6 +263,62 @@ To change the app name, edit `manifest.json`:
    - Upload bypasses the server, avoiding timeout for large files
    - Success/error toast appears based on result
 
+## 📋 Política de Uso
+
+### 1. Uso Autorizado
+
+Esta ferramenta é destinada exclusivamente para uso corporativo autorizado. Apenas colaboradores com endereço de e-mail corporativo validado podem utilizar o serviço.
+
+### 2. Responsabilidades do Usuário
+
+O usuário é responsável por:
+
+- Garantir que o conteúdo do áudio enviado esteja em conformidade com as políticas corporativas
+- Manter a confidencialidade de suas credenciais de acesso
+- Não utilizar a ferramenta para fins não autorizados
+- Respeitar direitos de propriedade intelectual e privacidade
+
+### 3. Limitações
+
+- Os arquivos de áudio são armazenados temporariamente e podem ser removidos conforme políticas de retenção
+- A ferramenta não garante backup automático dos arquivos enviados
+- O uso indevido pode resultar em suspensão do acesso
+
+### 4. Privacidade e Segurança
+
+Todos os dados são tratados de acordo com as políticas de segurança e privacidade corporativas. Os arquivos são transmitidos e armazenados de forma segura no Oracle Cloud Infrastructure.
+
+## 📖 Exemplo de Uso
+
+Siga estes passos para enviar uma solicitação de áudio:
+
+### Passo 1: Valide seu e-mail
+
+Digite seu endereço de e-mail corporativo no campo indicado e clique em "Validar". O sistema verificará se você tem permissão para usar a ferramenta.
+
+### Passo 2: Inicie a gravação
+
+Após a validação, clique no botão "Iniciar gravação". O sistema solicitará permissão para acessar o microfone do seu dispositivo. Permita o acesso quando solicitado.
+
+### Passo 3: Grave seu áudio
+
+Fale claramente no microfone. Você verá um cronômetro indicando a duração da gravação. Quando terminar, clique novamente no botão (que agora mostrará "Parar gravação").
+
+### Passo 4: Pré-visualize
+
+Antes de enviar, você pode ouvir o áudio gravado usando o player de áudio que aparecerá na tela. Certifique-se de que o conteúdo está correto.
+
+### Passo 5: Envie
+
+Clique no botão "Enviar gravação". O arquivo será enviado diretamente para o Oracle Cloud Infrastructure. Aguarde a confirmação de sucesso antes de fechar a página.
+
+### Dicas
+
+- Use um ambiente silencioso para melhor qualidade de áudio
+- Mantenha o dispositivo próximo durante a gravação
+- Verifique sua conexão com a internet antes de enviar
+- Em dispositivos móveis, você pode instalar o app na tela inicial para acesso rápido
+
 ## 🐛 Troubleshooting
 
 ### Error: "Email not authorized"
