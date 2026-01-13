@@ -122,9 +122,26 @@ async function init() {
             let errorMessage = `Erro na autenticação: ${decodeURIComponent(error)}`;
             
             if (error === 'missing_parameters') {
-              errorMessage += '. O OCI Domain não está enviando os parâmetros necessários (code, state). Verifique a configuração do Redirect URI na aplicação OCI Domain.';
+              const detailsDecoded = details ? decodeURIComponent(details) : '';
+              
+              // Check if we have state but no code (common issue)
+              if (detailsDecoded.includes('state=true') && detailsDecoded.includes('code=false')) {
+                errorMessage = 'Autenticação não completada. O OCI Domain retornou sem o código de autorização. ';
+                errorMessage += 'Possíveis causas:\n';
+                errorMessage += '1. Login não foi completado completamente\n';
+                errorMessage += '2. Usuário não tem permissão para acessar a aplicação\n';
+                errorMessage += '3. Configuração incorreta no OCI Domain\n\n';
+                errorMessage += 'Tente fazer login novamente e complete todo o processo.';
+              } else {
+                errorMessage += '. O OCI Domain não está enviando os parâmetros necessários (code, state). Verifique a configuração do Redirect URI na aplicação OCI Domain.';
+                if (details) {
+                  errorMessage += ` Detalhes: ${detailsDecoded}`;
+                }
+              }
+            } else if (error === 'authentication_incomplete') {
+              errorMessage = 'Autenticação não completada. ';
               if (details) {
-                errorMessage += ` Detalhes: ${decodeURIComponent(details)}`;
+                errorMessage += decodeURIComponent(details);
               }
             }
             

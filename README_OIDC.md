@@ -7,18 +7,22 @@ Este documento descreve como configurar a autenticação OIDC SSO usando **OCI I
 A aplicação usa **OCI Identity Domains** como Identity Provider OIDC:
 
 ```
-Aplicação → OCI Identity Domain (OIDC) → Usuário Autenticado
+Aplicação → OCI Identity Domain (OIDC) → Identity Provider SAML Federado → Usuário Autenticado
 ```
 
 **Fluxo:**
 
 1. Usuário acessa a aplicação
 2. Aplicação redireciona para **OCI Identity Domain** (endpoint OAuth2)
-3. Usuário faz login no OCI Domain (ou IdP federado configurado)
-4. OCI Domain retorna código de autorização
-5. Aplicação troca código por tokens (access token, ID token)
-6. Aplicação obtém informações do usuário via UserInfo endpoint
-7. Usuário é autenticado na aplicação
+3. OCI Domain redireciona para **Identity Provider SAML federado** (se configurado)
+4. Usuário faz login no IdP corporativo (ex: CORP-IDCS)
+5. IdP corporativo retorna para OCI Domain via SAML
+6. OCI Domain retorna código de autorização OIDC
+7. Aplicação troca código por tokens (access token, ID token)
+8. Aplicação obtém informações do usuário via UserInfo endpoint
+9. Usuário é autenticado na aplicação
+
+**Nota:** Se você tem um Identity Provider SAML federado (como CORP-IDCS), você precisa configurar as **Sign-On Policies** no OCI Domain para usar o IdP SAML durante o fluxo OIDC. Veja [CONFIGURAR_SAML_FEDERATION_OIDC.md](CONFIGURAR_SAML_FEDERATION_OIDC.md) para detalhes.
 
 ## 📋 Pré-requisitos
 
@@ -145,8 +149,29 @@ ALLOWED_EMAILS=["email1@example.com","email2@example.com"]
 - Verifique se a rota `/callback` está acessível
 - Verifique logs do Vercel para erros
 
+### Erro: "missing_parameters" - State recebido mas Code não recebido
+
+Se você recebe `state` mas não `code`, isso geralmente significa:
+
+1. **Autenticação não completada:** O usuário não completou o login no IdP corporativo
+2. **SAML Federation não configurada:** Se você tem um Identity Provider SAML federado, você precisa configurar as **Sign-On Policies** no OCI Domain
+3. **Usuário sem permissão:** O usuário pode não ter permissão para acessar a aplicação
+
+**Solução:** Veja [CONFIGURAR_SAML_FEDERATION_OIDC.md](CONFIGURAR_SAML_FEDERATION_OIDC.md) para configurar SAML federation com OIDC.
+
+### Login não redireciona para IdP corporativo (SAML)
+
+Se você tem um Identity Provider SAML federado mas o login não redireciona para ele:
+
+1. Verifique se o Identity Provider SAML está **ativo** no OCI Domain
+2. Configure uma **Sign-On Policy** que use o Identity Provider SAML
+3. Associe a Sign-On Policy à sua aplicação OIDC
+4. Veja [CONFIGURAR_SAML_FEDERATION_OIDC.md](CONFIGURAR_SAML_FEDERATION_OIDC.md) para instruções detalhadas
+
 ## 🔗 Referências
 
+- [CONFIGURAR_SAML_FEDERATION_OIDC.md](CONFIGURAR_SAML_FEDERATION_OIDC.md) - **IMPORTANTE:** Como configurar SAML Federation com OIDC
+- [TROUBLESHOOTING_STATE_SEM_CODE.md](TROUBLESHOOTING_STATE_SEM_CODE.md) - Troubleshooting quando state é recebido mas code não
 - [OCI_DOMAINS_REQUISITOS.md](OCI_DOMAINS_REQUISITOS.md) - Checklist de requisitos
 - [OIDC_CONFIG.env.example](OIDC_CONFIG.env.example) - Exemplo de arquivo de configuração
 - [Documentação OCI Identity Domains](https://docs.oracle.com/en-us/iaas/Content/Identity/domains/overview.htm)

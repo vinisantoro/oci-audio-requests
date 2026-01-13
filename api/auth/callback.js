@@ -50,15 +50,23 @@ async function parseRequestBody(req) {
 
 module.exports = async (req, res) => {
   try {
-    // Log request details for debugging (but limit sensitive data)
+    // Log request details for debugging - include full URL to see what OCI Domain is sending
+    const fullUrl = req.headers['x-forwarded-proto'] 
+      ? `${req.headers['x-forwarded-proto']}://${req.headers.host}${req.url}`
+      : req.url;
+    
     console.log('Callback received:', {
       method: req.method,
+      fullUrl: fullUrl,
       url: req.url,
+      query: req.query,
       hasQuery: !!req.query,
       hasBody: !!req.body,
       headers: {
         cookie: req.headers.cookie ? 'present' : 'missing',
-        'content-type': req.headers['content-type']
+        'content-type': req.headers['content-type'],
+        host: req.headers.host,
+        referer: req.headers.referer
       }
     });
 
@@ -70,6 +78,13 @@ module.exports = async (req, res) => {
       state = req.query?.state;
       error = req.query?.error;
       error_description = req.query?.error_description;
+      
+      console.log('GET request params:', {
+        hasCode: !!code,
+        hasState: !!state,
+        hasError: !!error,
+        queryKeys: Object.keys(req.query || {})
+      });
     } else if (req.method === 'POST') {
       // Parse body if needed
       const body = await parseRequestBody(req);
@@ -79,24 +94,43 @@ module.exports = async (req, res) => {
       state = req.query?.state || body?.state;
       error = req.query?.error || body?.error;
       error_description = req.query?.error_description || body?.error_description;
+      
+      console.log('POST request params:', {
+        hasCode: !!code,
+        hasState: !!state,
+        hasError: !!error,
+        queryKeys: Object.keys(req.query || {}),
+        bodyKeys: Object.keys(body || {})
+      });
     } else {
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
     // Handle OAuth errors
     if (error) {
-      console.error('OAuth error:', error, error_description);
+      console.error('OAuth error received:', { error, error_description, state });
       return res.redirect(`/?error=${encodeURIComponent(error_description || error)}`);
     }
 
     if (!code || !state) {
-      console.error('Missing parameters:', { 
+      console.error('Missing parameters - detailed info:', { 
         hasCode: !!code, 
+        codeValue: code ? 'present' : 'missing',
         hasState: !!state,
+        stateValue: state ? 'present' : 'missing',
         method: req.method,
+        fullUrl: fullUrl,
         queryKeys: Object.keys(req.query || {}),
+        queryValues: req.query,
         bodyKeys: Object.keys(await parseRequestBody(req))
       });
+      
+      // If we have state but no code, this usually means the user didn't complete authentication
+      // or OCI Domain redirected to wrong URL
+      if (state && !code) {
+        return res.redirect('/?error=authentication_incomplete&details=' + encodeURIComponent('OCI Domain retornou state mas não retornou code. Verifique se completou o login corretamente.'));
+      }
+      
       return res.redirect('/?error=missing_parameters&details=' + encodeURIComponent(`code=${!!code},state=${!!state},method=${req.method}`));
     }
 
