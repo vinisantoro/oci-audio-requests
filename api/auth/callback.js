@@ -22,22 +22,51 @@ function parseCookies(cookieHeader) {
 }
 
 module.exports = async (req, res) => {
-  if (req.method !== 'GET') {
+  // Log request details for debugging
+  console.log('Callback received:', {
+    method: req.method,
+    url: req.url,
+    query: req.query,
+    headers: {
+      cookie: req.headers.cookie ? 'present' : 'missing',
+      referer: req.headers.referer
+    }
+  });
+
+  // Handle both GET and POST (OCI Domain might use POST)
+  let code, state, error, error_description;
+  
+  if (req.method === 'GET') {
+    code = req.query?.code;
+    state = req.query?.state;
+    error = req.query?.error;
+    error_description = req.query?.error_description;
+  } else if (req.method === 'POST') {
+    // Try to get from query string first (some OCI configurations send POST with query params)
+    code = req.query?.code || req.body?.code;
+    state = req.query?.state || req.body?.state;
+    error = req.query?.error || req.body?.error;
+    error_description = req.query?.error_description || req.body?.error_description;
+  } else {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  try {
-    const { code, state, error, error_description } = req.query;
+  // Handle OAuth errors
+  if (error) {
+    console.error('OAuth error:', error, error_description);
+    return res.redirect(`/?error=${encodeURIComponent(error_description || error)}`);
+  }
 
-    // Handle OAuth errors
-    if (error) {
-      console.error('OAuth error:', error, error_description);
-      return res.redirect(`/?error=${encodeURIComponent(error_description || error)}`);
-    }
-
-    if (!code || !state) {
-      return res.redirect('/?error=missing_parameters');
-    }
+  if (!code || !state) {
+    console.error('Missing parameters:', { 
+      hasCode: !!code, 
+      hasState: !!state,
+      method: req.method,
+      queryKeys: Object.keys(req.query || {}),
+      bodyKeys: Object.keys(req.body || {})
+    });
+    return res.redirect('/?error=missing_parameters&details=' + encodeURIComponent(`code=${!!code},state=${!!state},method=${req.method}`));
+  }
 
     // Validate state from cookie
     const cookies = parseCookies(req.headers.cookie);

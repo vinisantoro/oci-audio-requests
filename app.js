@@ -118,7 +118,18 @@ async function init() {
           // Check for error in URL
           if (urlParams.has("error")) {
             const error = urlParams.get("error");
-            showErrorToast(`Erro na autenticação: ${decodeURIComponent(error)}`);
+            const details = urlParams.get("details");
+            let errorMessage = `Erro na autenticação: ${decodeURIComponent(error)}`;
+            
+            if (error === 'missing_parameters') {
+              errorMessage += '. O OCI Domain não está enviando os parâmetros necessários (code, state). Verifique a configuração do Redirect URI na aplicação OCI Domain.';
+              if (details) {
+                errorMessage += ` Detalhes: ${decodeURIComponent(details)}`;
+              }
+            }
+            
+            console.error('Authentication error:', error, details);
+            showErrorToast(errorMessage);
             // Clean URL after showing error
             window.history.replaceState({}, document.title, '/');
           }
