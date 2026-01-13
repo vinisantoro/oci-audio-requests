@@ -7,6 +7,23 @@ const { getAuthorizationURL } = require('../../lib/oidc-config');
 const crypto = require('crypto');
 
 module.exports = async (req, res) => {
+  // Handle POST requests that might come from OCI Domain redirects
+  // If this is a POST with OAuth parameters, redirect to callback
+  if (req.method === 'POST' && (req.body?.code || req.query?.code)) {
+    // OCI Domain redirected here with auth code, redirect to callback
+    const callbackUrl = process.env.CALLBACK_URL || 'https://notes.dailybits.tech/api/auth/callback';
+    const params = new URLSearchParams(req.query);
+    if (req.body?.code) params.set('code', req.body.code);
+    if (req.body?.state) params.set('state', req.body.state);
+    if (req.body?.error) params.set('error', req.body.error);
+    
+    res.writeHead(302, {
+      'Location': `${callbackUrl}?${params.toString()}`
+    });
+    res.end();
+    return;
+  }
+
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

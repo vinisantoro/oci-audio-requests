@@ -48,7 +48,7 @@ echo "⚠️  IMPORTANTE: Configure as seguintes variáveis no Vercel Dashboard:
 echo "   - OCI_DOMAIN_URL=https://<domain-id>.identity.oraclecloud.com"
 echo "   - CLIENT_ID=<your-client-id>"
 echo "   - CLIENT_SECRET=<your-client-secret>"
-echo "   - CALLBACK_URL=https://notes.dailybits.tech/callback"
+echo "   - CALLBACK_URL=https://notes.dailybits.tech/api/auth/callback"
 echo "   - SESSION_SECRET=<your-session-secret>"
 echo "   - OCI_UPLOAD_URL"
 echo ""

@@ -23,9 +23,9 @@ CLIENT_SECRET=idcscs-a3cec1f2-44b7-4108-bb3c-68e7538a8f32
 
 # URL de callback OIDC
 # Para desenvolvimento local, você precisará usar ngrok ou similar
-# Exemplo: CALLBACK_URL=https://abc123.ngrok.io/callback
-# Ou configure para usar o domínio de preview: CALLBACK_URL=https://notes.dailybits.tech/callback
-CALLBACK_URL=http://localhost:3000/callback
+# Exemplo: CALLBACK_URL=https://abc123.ngrok.io/api/auth/callback
+# Ou configure para usar o domínio de preview: CALLBACK_URL=https://notes.dailybits.tech/api/auth/callback
+CALLBACK_URL=http://localhost:3000/api/auth/callback
 
 # ============================================================================
 # Session Configuration
@@ -69,7 +69,7 @@ OCI_UPLOAD_URL=https://objectstorage.region.oraclecloud.com/p/par-id/n/namespace
    
    - Opção B: Use o domínio de preview da Vercel:
      ```bash
-     CALLBACK_URL=https://notes.dailybits.tech/callback
+     CALLBACK_URL=https://notes.dailybits.tech/api/auth/callback
      ```
      Mas configure também no OCI Domain para aceitar este callback
 

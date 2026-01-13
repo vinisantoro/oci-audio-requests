@@ -37,7 +37,7 @@ Before deploying, you need to configure the following environment variables:
    - **IMPORTANT:** Keep this secret secure and never commit it to version control
 
 4. **`CALLBACK_URL`** - URL de callback OIDC
-   - Example: `https://notes.dailybits.tech/callback`
+   - Example: `https://notes.dailybits.tech/api/auth/callback`
    - Must match the "Custom Social Linking Callback URL" configured in OCI Domain
 
 5. **`SESSION_SECRET`** - Secret para assinar cookies de sessão

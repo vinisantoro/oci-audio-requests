@@ -7,9 +7,11 @@ Este documento contém as instruções para configurar as variáveis de ambiente
 Configure as seguintes variáveis no Vercel Dashboard:
 
 ### 1. OCI Domain URL
+
 **Variável:** `OCI_DOMAIN_URL`  
 **Valor:** `https://<domain-id>.identity.oraclecloud.com`  
 **Como encontrar:**
+
 - Acesse OCI Console
 - Vá para **Identity & Security > Domains**
 - Selecione seu Domain (OCID: `ocid1.domain.oc1..aaaaaaaab77apuidncb43h7tgvbhinpqzichb3a5l2yvenjfantfuscykbeq`)
@@ -17,30 +19,37 @@ Configure as seguintes variáveis no Vercel Dashboard:
 - Copie a URL completa (formato: `https://<domain-id>.identity.oraclecloud.com`)
 
 ### 2. Client ID
+
 **Variável:** `CLIENT_ID`  
 **Valor:** `99016db2a53c40a89ddf472380a84e63`
 
 ### 3. Client Secret
+
 **Variável:** `CLIENT_SECRET`  
 **Valor:** `idcscs-a3cec1f2-44b7-4108-bb3c-68e7538a8f32`  
 **⚠️ IMPORTANTE:** Mantenha este valor seguro e não o compartilhe publicamente.
 
 ### 4. Callback URL
+
 **Variável:** `CALLBACK_URL`  
-**Valor:** `https://notes.dailybits.tech/callback`  
-**Nota:** Deve corresponder exatamente ao "Custom Social Linking Callback URL" configurado no OCI Domain.
+**Valor:** `https://notes.dailybits.tech/api/auth/callback`  
+**⚠️ IMPORTANTE:** Deve ser `/api/auth/callback`, não `/callback` ou `/login`!  
+**Nota:** Deve corresponder exatamente ao "Custom Social Linking Callback URL" e "Redirect URIs" configurados no OCI Domain.
 
 ### 5. Session Secret
+
 **Variável:** `SESSION_SECRET`  
 **Valor:** `SJSDdWGyPdYdFAK5OLJFscsj7+M3E9RHcOUPf+WE3io=`  
 **Nota:** Este é um valor aleatório seguro gerado para assinar cookies de sessão.
 
 ### 6. OCI Upload URL
+
 **Variável:** `OCI_UPLOAD_URL`  
 **Valor:** Substitua pelos valores reais do seu bucket OCI  
 **Formato:** `https://objectstorage.<region>.oraclecloud.com/p/<par-id>/n/<namespace>/b/<bucket>/o/`
 
 ### 7. ALLOWED_EMAILS (Opcional)
+
 **Variável:** `ALLOWED_EMAILS`  
 **Valor:** `["email1@example.com","email2@example.com"]` (formato JSON array)  
 **Nota:** Por enquanto, manter vazio (não configurar).
@@ -97,14 +106,17 @@ Após configurar todas as variáveis:
 ## 🔍 Troubleshooting
 
 ### Erro: "OIDC configuration error"
+
 - Verifique se `OCI_DOMAIN_URL` está correto e acessível
 - Certifique-se de que todas as variáveis estão configuradas no ambiente correto (Preview/Production)
 
 ### Erro: "invalid_state" ou "Token exchange failed"
+
 - Verifique se `CLIENT_SECRET` está correto
 - Verifique se `CALLBACK_URL` corresponde exatamente ao configurado no OCI Domain
 
 ### Erro: "User email not found"
+
 - Verifique se o OCI Domain está configurado para retornar o email do usuário no UserInfo endpoint
 - Verifique os scopes configurados na aplicação OCI (deve incluir `email`)
 
@@ -113,11 +125,12 @@ Após configurar todas as variáveis:
 - [ ] `OCI_DOMAIN_URL` configurado (descobrir a URL do domain)
 - [ ] `CLIENT_ID` configurado: `99016db2a53c40a89ddf472380a84e63`
 - [ ] `CLIENT_SECRET` configurado: `idcscs-a3cec1f2-44b7-4108-bb3c-68e7538a8f32`
-- [ ] `CALLBACK_URL` configurado: `https://notes.dailybits.tech/callback`
+- [ ] `CALLBACK_URL` configurado: `https://notes.dailybits.tech/api/auth/callback`
 - [ ] `SESSION_SECRET` configurado: `SJSDdWGyPdYdFAK5OLJFscsj7+M3E9RHcOUPf+WE3io=`
 - [ ] `OCI_UPLOAD_URL` configurado com valores reais
 - [ ] URLs configuradas no OCI Domain Application:
   - [ ] Application URL: `https://notes.dailybits.tech`
   - [ ] Custom Sign-In URL: `https://notes.dailybits.tech/login`
   - [ ] Custom Sign-Out URL: `https://notes.dailybits.tech/logout`
-  - [ ] Custom Social Linking Callback URL: `https://notes.dailybits.tech/callback`
+  - [ ] Custom Social Linking Callback URL: `https://notes.dailybits.tech/api/auth/callback`
+  - [ ] Redirect URIs (OAuth Settings): `https://notes.dailybits.tech/api/auth/callback`

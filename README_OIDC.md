@@ -43,9 +43,10 @@ Aplicação → OCI Identity Domain (OIDC) → Usuário Autenticado
 Preencha os seguintes campos:
 
 - **Application URL:** `https://notes.dailybits.tech`
-- **Custom Sign-In URL:** `https://notes.dailybits.tech/login`
-- **Custom Sign-Out URL:** `https://notes.dailybits.tech/logout`
-- **Custom Social Linking Callback URL:** `https://notes.dailybits.tech/callback`
+- **Custom Sign-In URL:** `https://notes.dailybits.tech/api/auth/login` (ou deixe vazio)
+- **Custom Sign-Out URL:** `https://notes.dailybits.tech/api/auth/logout`
+- **Custom Social Linking Callback URL:** `https://notes.dailybits.tech/api/auth/callback`
+- **Redirect URIs (OAuth Settings):** `https://notes.dailybits.tech/api/auth/callback`
 
 ### Passo 3: Obter Credenciais
 
@@ -78,7 +79,7 @@ CLIENT_ID=your-client-id-here
 CLIENT_SECRET=your-client-secret-here
 
 # Callback URL (deve corresponder ao configurado no OCI)
-CALLBACK_URL=https://notes.dailybits.tech/callback
+CALLBACK_URL=https://notes.dailybits.tech/api/auth/callback
 
 # Session Secret (gere um valor aleatório seguro)
 SESSION_SECRET=your-session-secret-here
